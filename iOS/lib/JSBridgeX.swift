@@ -8,12 +8,10 @@
 
 import UIKit
 
-typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
-typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
+public typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
+public typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
 
-class JSBridgeX: NSObject, UIWebViewDelegate {
-    
-    private let DEBUG = false
+public class JSBridgeX: NSObject, UIWebViewDelegate {
     
     private let JBX_SCHEME = "torlaxbridge"
     private let JBX_HOST = "__TORLAX_HOST__"
@@ -41,7 +39,7 @@ class JSBridgeX: NSObject, UIWebViewDelegate {
     private var postMessageQueue: [[String: AnyObject]]? = []
     private var eventUniqueId = 0
     
-    init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?) {
+    public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?) {
         self.webView = webView
         self.webViewDelegate = webViewDelegate
         super.init()
@@ -49,30 +47,30 @@ class JSBridgeX: NSObject, UIWebViewDelegate {
         self.injectedJS = self.loadInjectedJS()
     }
     
-    deinit {
+    public deinit {
         self.webViewDelegate = nil
         self.webView.delegate = nil
     }
     
     //MARK: - internal property
     
-    func loadURL(url: NSURL) {
+    public func loadURL(url: NSURL) {
         self.webView.loadRequest(NSURLRequest(URL: url))
     }
     
-    func loadHTMLString(string: String, baseURL: NSURL?) {
+    public func loadHTMLString(string: String, baseURL: NSURL?) {
         self.webView.loadHTMLString(string, baseURL: baseURL)
     }
     
-    func registerEvent(eventName: String, handler: EventHandler) {
+    public func registerEvent(eventName: String, handler: EventHandler) {
         eventMap[eventName] = handler
     }
     
-    func unregisterEvent(eventName: String) {
+    public func unregisterEvent(eventName: String) {
         eventMap.removeValueForKey(eventName)
     }
     
-    func send(eventName: String, data: [String: AnyObject]?, callback: EventCallback?) {
+    public func send(eventName: String, data: [String: AnyObject]?, callback: EventCallback?) {
         var message = [String: AnyObject]()
         message[JBX_KEY_METHOD] = JBX_METHOD_SEND
         message[JBX_KEY_EVENT_NAME] = eventName
@@ -183,7 +181,7 @@ class JSBridgeX: NSObject, UIWebViewDelegate {
     
 //MARK: - UIWebViewDelegate
     
-    func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+    public func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
         
         if webView != self.webView {
             return true
@@ -206,7 +204,7 @@ class JSBridgeX: NSObject, UIWebViewDelegate {
         return true
     }
     
-    func webViewDidStartLoad(webView: UIWebView) {
+    public func webViewDidStartLoad(webView: UIWebView) {
         if webView != self.webView {
             return
         }
@@ -215,14 +213,13 @@ class JSBridgeX: NSObject, UIWebViewDelegate {
         }
     }
     
-    func webViewDidFinishLoad(webView: UIWebView) {
+    public func webViewDidFinishLoad(webView: UIWebView) {
         if webView != self.webView {
             return
         }
-        if !DEBUG {
-            if webView.stringByEvaluatingJavaScriptFromString("typeof \(JBX_JS_OBJECT) == 'object'") != "true" {
-                webView.stringByEvaluatingJavaScriptFromString(self.injectedJS)
-            }
+        
+        if webView.stringByEvaluatingJavaScriptFromString("typeof \(JBX_JS_OBJECT) == 'object'") != "true" {
+            webView.stringByEvaluatingJavaScriptFromString(self.injectedJS)
         }
         
         if let messages = postMessageQueue {
@@ -236,7 +233,7 @@ class JSBridgeX: NSObject, UIWebViewDelegate {
         }
     }
     
-    func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
+    public func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
         if webView != self.webView {
             return
         }
