@@ -47,7 +47,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         self.injectedJS = self.loadInjectedJS()
     }
     
-    public deinit {
+    deinit {
         self.webViewDelegate = nil
         self.webView.delegate = nil
     }
@@ -96,12 +96,8 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     }
     
     private func loadInjectedJS() -> String {
-        if DEBUG {
-            return ""
-        } else {
-            let jsFilePath = NSBundle.mainBundle().pathForResource("JSBridge", ofType: "js")!
-            return (try? String(contentsOfFile: jsFilePath)) ?? ""
-        }
+        let jsFilePath = NSBundle.mainBundle().pathForResource("JSBridge", ofType: "js")!
+        return (try? String(contentsOfFile: jsFilePath)) ?? ""
     }
     
     private func dispatchMessageQueueFromJS() -> Bool {
