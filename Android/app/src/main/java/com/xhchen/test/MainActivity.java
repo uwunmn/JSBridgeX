@@ -6,7 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 
-import com.xhchen.jsbridgex.JSBridge;
+import com.xhchen.jsbridgex.JSBridgeX;
 import com.xhchen.jsbridgex.R;
 
 import org.json.JSONException;
@@ -17,24 +17,24 @@ import org.json.JSONObject;
  */
 public class MainActivity extends Activity {
 
-    private JSBridge jsBridge;
+    private JSBridgeX jsBridge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        jsBridge = new JSBridge(this, (WebView) findViewById(R.id.web_view));
-        jsBridge.init(null);
-        jsBridge.loadHTML("file:///android_asset/index.html");
-        jsBridge.addEvent("SendMessageFromJS", new JSBridge.EventHandler() {
+        jsBridge = new JSBridgeX(this);
+        jsBridge.init((WebView) findViewById(R.id.web_view), null);
+        jsBridge.loadURL("file:///android_asset/index.html");
+        jsBridge.putEvent("SendMessageFromJS", new JSBridgeX.EventHandler() {
 
             @Override
-            public void onHandle(JSONObject data, JSBridge.EventResponseCallback callback) {
+            public void onHandle(JSONObject data, JSBridgeX.EventCallback callback) {
                 Log.d("[JSBridgeX]", "[SendMessageFromJS] data: " + data.toString());
                 try {
                     JSONObject responseData = new JSONObject();
                     responseData.put("value", "hello");
-                    callback.onResponseCallback(200, responseData);
+                    callback.onCallback(200, responseData);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -46,10 +46,10 @@ public class MainActivity extends Activity {
         try {
             JSONObject data = new JSONObject();
             data.put("text", "hello");
-            jsBridge.send("SendMessageFromNative", data, new JSBridge.EventResponseCallback(){
+            jsBridge.send("SendMessageFromNative", data, new JSBridgeX.EventCallback(){
 
                 @Override
-                public void onResponseCallback(int code, JSONObject data) {
+                public void onCallback(int code, JSONObject data) {
                     Log.d("[JSBridgeX]", "code: " + code + ", data: " + data.toString());
                 }
             });

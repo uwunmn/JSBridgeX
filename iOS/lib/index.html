@@ -66,15 +66,19 @@
             bridge.init()
 
             window.sendMessage = function() {
-                var data = 'Hello from JS button';
+                var data = {'desc': 'Hello from JS button'};
                 log('JS sending message', data);
-                bridge.send(null, data, function(responseData) {
-                    log('JS got response', responseData);
+                bridge.send('Hello', data, function(code, data) {
+                    log('JS got response', code + data);
+                });
+
+				bridge.send('Hello1', data, function(code, data) {
+                    log('JS got response', code + data);
                 });
             };
 
-			bridge.registerEvent('SendMessage', function(responseData) {
-                log('SendMessage', responseData);
+			bridge.registerEvent('SendMessage', function(code, data) {
+                log('SendMessage', code + data);
             });
         });
     </script>
