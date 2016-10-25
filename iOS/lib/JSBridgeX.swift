@@ -104,8 +104,14 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     }
     
     private func loadInjectedJS() -> String {
-        let jsFilePath = NSBundle.mainBundle().pathForResource("JSBridge", ofType: "js")!
-        return (try? String(contentsOfFile: jsFilePath)) ?? ""
+        let resourceBundle = NSBundle(forClass: JSBridgeX.self)
+        if let url = resourceBundle.URLForResource("JSBridgeX", withExtension: "bundle"),
+            let bundle = NSBundle(URL: url),
+            let jsFilePath = bundle.pathForResource("JSBridge", ofType: "js"),
+            let jsString = try? String(contentsOfFile: jsFilePath) {
+            return jsString
+        }
+        return ""
     }
     
     private func dispatchMessageQueueFromJS() -> Bool {
