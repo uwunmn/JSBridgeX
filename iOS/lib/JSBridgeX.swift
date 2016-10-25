@@ -8,10 +8,18 @@
 
 import UIKit
 
-public typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
-public typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
+
 
 public class JSBridgeX: NSObject, UIWebViewDelegate {
+ 
+    public typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
+    public typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
+    public typealias Message = [String: AnyObject]
+    
+    public static let CODE_SUCCESS = 200
+    public static let CODE_NOT_FOUND = 404
+    public static let CODE_INVALID_PARAMETER = 403
+    public static let CODE_BAD_BRIDGE = 503
     
     private let JBX_SCHEME = "torlaxbridge"
     private let JBX_HOST = "__TORLAX_HOST__"
@@ -36,7 +44,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     private var injectedJS: String = ""
     private var eventMap: [String: EventHandler] = [: ]
     private var eventCallbacks: [String: EventCallback] = [: ]
-    private var postMessageQueue: [[String: AnyObject]]? = []
+    private var postMessageQueue: [Message]! = []
     private var eventUniqueId = 0
     
     public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?) {
@@ -84,7 +92,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         postMessage(message)
     }
     
-//MARK: - private
+    //MARK: - private
     
     private func callback(code: Int, callbackId: String, data: [String: AnyObject]?) {
         var message = [String: AnyObject]()
@@ -120,11 +128,11 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         return true
     }
     
-    private func parseMessageQueue(data: NSData) -> [[String: AnyObject]] {
-        return ((try? NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments)) as? [[String: AnyObject]]) ?? []
+    private func parseMessageQueue(data: NSData) -> [Message] {
+        return ((try? NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments)) as? [Message]) ?? []
     }
     
-    private func stringifyMessage(message: [String: AnyObject]) -> String {
+    private func stringifyMessage(message: Message) -> String {
         do {
             return try String(data: NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions(rawValue: 0)), encoding: NSUTF8StringEncoding) ?? ""
         } catch {
@@ -133,7 +141,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         return ""
     }
     
-    private func handleMessageSentFromJS(message: [String: AnyObject]) {
+    private func handleMessageSentFromJS(message: Message) {
         let callbackId = message[JBX_KEY_CALLBACK_ID] as? String
         let eventName = message[JBX_KEY_EVENT_NAME] as? String
         var callbackBlock: EventCallback? = nil
@@ -149,20 +157,22 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
             eventHandler(data: data, callback: callbackBlock)
             return
         }
-        let data = [JBX_KEY_DESCRIPTION: "NOT FOUND"]
-        callbackBlock?(code: 404, data: data)
+        callbackBlock?(code: JSBridgeX.CODE_NOT_FOUND, data: nil)
     }
     
-    private func handleMessageCallbackFromJS(message: [String: AnyObject]) {
+    private func handleMessageCallbackFromJS(message: Message) {
         if let callbackId = message[JBX_KEY_CALLBACK_ID] as? String,
             let eventCallback = eventCallbacks[callbackId] {
-            let code = message[JBX_KEY_CODE] as? Int
-            eventCallback(code: code ?? 0,
-                          data: message[JBX_KEY_DATA] as? [String: AnyObject])
+            if let code = message[JBX_KEY_CODE] as? Int {
+                eventCallback(code: code,
+                              data: message[JBX_KEY_DATA] as? [String: AnyObject])
+            } else {
+                eventCallback(code: JSBridgeX.CODE_INVALID_PARAMETER, data: nil)
+            }
         }
     }
     
-    private func postMessage(message: [String: AnyObject]) {
+    private func postMessage(message: Message) {
         if postMessageQueue != nil {
             postMessageQueue!.append(message)
         } else {
@@ -170,19 +180,19 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         }
     }
     
-    private func postMessageToJS(message: [String: AnyObject]) {
+    private func postMessageToJS(message: Message) {
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_POST_MESSAGE_TO_JS)(\(stringifyMessage(message)))"
         self.webView.stringByEvaluatingJavaScriptFromString(jsMethod)
     }
     
-//MARK: - UIWebViewDelegate
+    //MARK: - UIWebViewDelegate
     
     public func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
         
         if webView != self.webView {
             return true
         }
-
+        
         let url = request.URL
         if let scheme = url?.scheme where scheme == JBX_SCHEME {
             if let host = url?.host where host == JBX_HOST {
@@ -237,5 +247,5 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
             delegate.webView?(webView, didFailLoadWithError: error)
         }
     }
-
+    
 }
