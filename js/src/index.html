@@ -77,8 +77,9 @@
                 });
             };
 
-			bridge.registerEvent('SendMessage', function(code, data) {
-                log('SendMessage', code + data);
+			bridge.registerEvent('SendMessage', function(data, callback) {
+                log('SendMessage', JSON.stringify(data));
+				callback(200, {'desc': 'Success'})
             });
         });
     </script>

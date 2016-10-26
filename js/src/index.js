@@ -3,6 +3,11 @@
 (function(w, doc) {
     if (w.JSBridge) return;
 
+    var CODE_SUCCESS = 200
+    var CODE_NOT_FOUND = 404
+    var CODE_INVALID_PARAMETER = 403
+    var CODE_BAD_BRIDGE = 503
+
     var JBX_SCHEME = "torlaxbridge";
     var JBX_HOST = "__TORLAX_HOST__";
     var JBX_PATH = "/__TORLAX_EVENT__";
@@ -15,7 +20,6 @@
     var JBX_KEY_DATA = "data";
     var JBX_KEY_CODE = "code";
     var JBX_KEY_CALLBACK_ID = "callbackId";
-    var JBX_KEY_DESCRIPTION = "description";
 
     var ua = navigator.userAgent;
     var isIOSDevice = /i(Phone|Pod|Pad|OS)/g.test(ua);
@@ -70,7 +74,7 @@
     }
 
     function dispatchMessageFromNative(message) {
-        console.log('dispatchMessage: ' + JSON.stringify(message));
+        console.log('dispatchMessageFromNative: ' + JSON.stringify(message));
         setTimeout(function() {
             try {
                 if (message.method == JBX_METHOD_SEND) {
@@ -79,27 +83,30 @@
                     handleMessageCallbackFromNative(message)
                 }              
             } catch (e) {
-                callback(404, {JBX_KEY_DESCRIPTION: 'Not Found'});
+                console.log(e);
             }
         });
     }
 
     function handleMessageSentFromNative(message) {
+        console.log('handleMessageSentFromNative');
         var callbackId = message.callbackId;
-        responseCallback = function(responseData) {
-            if (callbackId) {
-                callback(200, callbackId, responseData);    
-            }
-        };
-        var handler = eventMap[message.eventName];
-        if (handler) {
-            handler(message.data, responseCallback);    
+        var eventHandler = eventMap[message.eventName];
+        if (eventHandler) {
+            eventHandler(message.data, function(code, responseData) {
+                if (callbackId) {
+                    callback(code, callbackId, responseData);    
+                }
+            });    
         } else {
-            callback(404, {JBX_KEY_DESCRIPTION: 'Not Found'});
+            if (callbackId) {
+                callback(CODE_NOT_FOUND, callbackId, nil);    
+            }
         }
     }
 
     function handleMessageCallbackFromNative(message) {
+        console.log('handleMessageCallbackFromNative');
         var callbackId = message.callbackId;
         if (callbackId === undefined) {
             return;
