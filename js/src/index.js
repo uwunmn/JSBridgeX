@@ -140,10 +140,6 @@
         return []
     }
 
-    function ajax(path, data, callback) {
-        send(METHOD_SEND, data, callback)
-    }
-
     w.JSBridge = {
         init: init.bind(this),
         registerEvent: registerEvent.bind(this),
@@ -151,7 +147,6 @@
         send: send.bind(this),
         dispatchMessageFromNative: dispatchMessageFromNative.bind(this),
         fetchMessageQueue: fetchMessageQueue.bind(this),
-        ajax: ajax.bind(this),
     }
 
     messagingIframe = doc.createElement('iframe');
