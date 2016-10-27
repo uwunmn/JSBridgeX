@@ -29,10 +29,10 @@
     var eventCallbacks = {};
     var eventUniqueId = 1;
     var messagingIframe;
-    var defaultEventHandler;
+    var messageHandler;
 
-    function init(eventHandler) {
-        defaultEventHandler = eventHandler
+    function init(defaultMessageHandler) {
+        messageHandler = defaultMessageHandler
     }
 
     function registerEvent(eventName, eventHandler) {
@@ -99,9 +99,9 @@
                     callback(code, callbackId, responseData);
                 }
             });
-        } else {
-            defaultEventHandler(message)
+            return;
         }
+        messageHandler(message);
     }
 
     function handleMessageCallbackFromNative(message) {

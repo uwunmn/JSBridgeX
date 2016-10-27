@@ -14,6 +14,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
  
     public typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
     public typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
+    public typealias MessageHandler = (message: Message) -> Void
     
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
@@ -38,10 +39,12 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     private var eventCallbacks: [String: EventCallback] = [: ]
     private var postMessageQueue: [Message]! = []
     private var eventUniqueId = 0
+    private let defaultMessageHandler: MessageHandler
     
-    public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?) {
+    public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?, defaultMessageHandler: MessageHandler) {
         self.webView = webView
         self.webViewDelegate = webViewDelegate
+        self.defaultMessageHandler = defaultMessageHandler
         super.init()
         self.webView.delegate = self
         self.injectedJS = self.loadInjectedJS()
@@ -140,15 +143,6 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         return []
     }
     
-    private func stringifyMessage(message: Message) -> String {
-        do {
-            return try String(data: NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions(rawValue: 0)), encoding: NSUTF8StringEncoding) ?? ""
-        } catch {
-            
-        }
-        return ""
-    }
-    
     private func handleMessageSentFromJS(message: Message) {
         let callbackId = message.callbackId
         let eventName = message.eventName
@@ -164,7 +158,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
             eventHandler(data: message.data, callback: callbackBlock)
             return
         }
-        callbackBlock?(code: JSBridgeX.CODE_NOT_FOUND, data: nil)
+        defaultMessageHandler(message: message)
     }
     
     private func handleMessageCallbackFromJS(message: Message) {
@@ -303,6 +297,7 @@ public class Message {
             self.code = rawDict[JBX_KEY_CODE] as? Int
             self.data = rawDict[JBX_KEY_DATA] as? [String: AnyObject]
             self.callbackId = rawDict[JBX_KEY_CALLBACK_ID] as? String
+            dict = rawDict
             return
         }
         
