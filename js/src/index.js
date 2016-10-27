@@ -1,6 +1,6 @@
 'use strict';
 
-(function(w, doc) {
+(function (w, doc) {
     if (w.JSBridge) return;
 
     var CODE_SUCCESS = 200
@@ -11,10 +11,10 @@
     var JBX_SCHEME = "torlaxbridge";
     var JBX_HOST = "__TORLAX_HOST__";
     var JBX_PATH = "/__TORLAX_EVENT__";
-    
+
     var JBX_METHOD_SEND = "SEND";
     var JBX_METHOD_CALLBACK = "CALLBACK";
-    
+
     var JBX_KEY_METHOD = "method";
     var JBX_KEY_EVENT_NAME = "eventName";
     var JBX_KEY_DATA = "data";
@@ -76,13 +76,13 @@
 
     function dispatchMessageFromNative(message) {
         console.log('dispatchMessageFromNative: ' + JSON.stringify(message));
-        setTimeout(function() {
+        setTimeout(function () {
             try {
                 if (message.method == JBX_METHOD_SEND) {
                     handleMessageSentFromNative(message);
                 } else if (message.method == JBX_METHOD_CALLBACK) {
                     handleMessageCallbackFromNative(message)
-                }              
+                }
             } catch (e) {
                 console.log(e);
             }
@@ -94,11 +94,11 @@
         var callbackId = message.callbackId;
         var eventHandler = eventMap[message.eventName];
         if (eventHandler) {
-            eventHandler(message.data, function(code, responseData) {
+            eventHandler(message.data, function (code, responseData) {
                 if (callbackId) {
-                    callback(code, callbackId, responseData);    
+                    callback(code, callbackId, responseData);
                 }
-            });    
+            });
         } else {
             defaultEventHandler(message)
         }
@@ -112,7 +112,7 @@
         }
         var eventCallback = eventCallbacks[callbackId];
         if (eventCallback) {
-            eventCallback(message.code, message.data);    
+            eventCallback(message.code, message.data);
         }
     }
 
@@ -128,7 +128,7 @@
             try {
                 AndroidAPI.dispatchMessageQueueFromJS(fetchMessageQueue());
             } catch (e) {
-                console.log(e); 
+                console.log(e);
             }
         }
     }

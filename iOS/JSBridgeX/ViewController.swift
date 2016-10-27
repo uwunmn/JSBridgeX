@@ -39,7 +39,7 @@ class ViewController: UIViewController, UIWebViewDelegate {
     }
     
     func onClickSend() {
-        jsBridge.send("SendMessage", data: ["desc": "hello"]) { (code, data) in
+        jsBridge.send("SendMessage1", data: ["desc": "hello"]) { (code, data) in
             print("SendMessage callback")
         }
     }
