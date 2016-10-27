@@ -29,9 +29,10 @@
     var eventCallbacks = {};
     var eventUniqueId = 1;
     var messagingIframe;
+    var defaultEventHandler;
 
-    function init() {
-        
+    function init(eventHandler) {
+        defaultEventHandler = eventHandler
     }
 
     function registerEvent(eventName, eventHandler) {
@@ -99,9 +100,7 @@
                 }
             });    
         } else {
-            if (callbackId) {
-                callback(CODE_NOT_FOUND, callbackId, nil);    
-            }
+            defaultEventHandler(message)
         }
     }
 
