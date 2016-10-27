@@ -88,15 +88,7 @@
             });
 
             window.sendMessage = function() {
-                var data = {'desc': 'Hello from JS button'};
-                log('JS sending message', data);
-                bridge.send('Hello', data, function(code, data) {
-                    log('JS got response', code + data);
-                });
-
-                bridge.send('Hello1', data, function(code, data) {
-                    log('JS got response', code + data);
-                });
+                bridge.listAllEvents();
             };
 
             bridge.registerEvent('SendMessage', function(data, callback) {

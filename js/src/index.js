@@ -74,6 +74,12 @@
         postMessageToNative(message);
     }
 
+    function listAllEvents() {
+        send("listAllEvents", null, function (code, data) { 
+            console.log('Events: ' + JSON.stringify(data.Events));
+        });
+    }
+
     function dispatchMessageFromNative(message) {
         console.log('dispatchMessageFromNative: ' + JSON.stringify(message));
         setTimeout(function () {
@@ -153,6 +159,7 @@
         send: send.bind(this),
         dispatchMessageFromNative: dispatchMessageFromNative.bind(this),
         fetchMessageQueue: fetchMessageQueue.bind(this),
+        listAllEvents: listAllEvents.bind(this),
     }
 
     messagingIframe = doc.createElement('iframe');

@@ -48,6 +48,10 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         super.init()
         self.webView.delegate = self
         self.injectedJS = self.loadInjectedJS()
+        registerEvent("listAllEvents") { (data, callback) in
+            let events = [String](self.eventMap.keys)
+            callback?(code: JSBridgeX.CODE_SUCCESS, data: ["Events": events])
+        }
     }
     
     deinit {
