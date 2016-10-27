@@ -262,39 +262,39 @@ private let JBX_KEY_CALLBACK_ID = "callbackId"
 
 public class Message {
     
-    var method: String {
+    public var method: String {
         didSet {
             self.dict[JBX_KEY_METHOD] = self.method
         }
     }
-    var eventName: String? {
+    public var eventName: String? {
         didSet {
             self.dict[JBX_KEY_EVENT_NAME] = self.eventName
         }
     }
-    var code: Int? {
+    public var code: Int? {
         didSet {
             self.dict[JBX_KEY_CODE] = self.code
         }
     }
-    var data: [String: AnyObject]? {
+    public var data: [String: AnyObject]? {
         didSet {
             self.dict[JBX_KEY_DATA] = self.data
         }
     }
-    var callbackId: String? {
+    public var callbackId: String? {
         didSet {
             self.dict[JBX_KEY_CALLBACK_ID] = self.callbackId
         }
     }
     private var dict: [String: AnyObject] = [:]
     
-    init(method: String) {
+    public init(method: String) {
         self.method = method
         self.dict[JBX_KEY_METHOD] = method
     }
     
-    init?(rawDict: [String: AnyObject]) {
+    public init?(rawDict: [String: AnyObject]) {
         if let method = rawDict[JBX_KEY_METHOD] as? String  {
             self.method = method
             self.eventName = rawDict[JBX_KEY_EVENT_NAME] as? String
@@ -308,7 +308,7 @@ public class Message {
         return nil
     }
     
-    func toString() -> String {
+    public func toString() -> String {
         do {
             let data = try NSJSONSerialization.dataWithJSONObject(self.dict, options: NSJSONWritingOptions(rawValue: 0))
             return String(data: data, encoding: NSUTF8StringEncoding) ?? ""
