@@ -1,5 +1,5 @@
 #
-#  Be sure to run `pod spec lint JSBridge.podspec' to ensure this is a
+#  Be sure to run `pod spec lint JSBridgeX.podspec' to ensure this is a
 #  valid spec and to remove all comments including this before submitting the spec.
 #
 #  To learn more about Podspec attributes see http://docs.cocoapods.org/specification.html
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 
   s.name         = "JSBridgeX"
   s.version      = "0.1.3"
-  s.summary      = "JSBridgeX"
+  s.summary      = "JavaScript Bridge between Native (iOS/Android) and JavaScript"
 
   # This description is used to generate tags and improve search results.
   #   * Think: What does it do? Why did you write it? What is the focus?
@@ -25,10 +25,10 @@ Pod::Spec.new do |s|
   #   * Write the description between the DESC delimiters below.
   #   * Finally, don't worry about the indent, CocoaPods strips it!
   s.description  = <<-DESC
-                    JSBridgeX
+                    JavaScript Bridge between Native (iOS/Android) and JavaScript
                    DESC
 
-  s.homepage     = "http://10.1.26.14/mobile/jsbridgex"
+  s.homepage     = "https://github.com/uwunmn/JSBridgeX"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
 
 
@@ -53,10 +53,7 @@ Pod::Spec.new do |s|
   #  profile URL.
   #
 
-  s.author             = { "陈小辉" => "cxh@taolx.com" }
-  # Or just: s.author    = "陈小辉"
-  # s.authors            = { "陈小辉" => "cxh@taolx.com" }
-  # s.social_media_url   = "http://twitter.com/陈小辉"
+  s.author             = { "陈小辉" => "knop0211@gmail.com" }
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
@@ -80,7 +77,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "http://10.1.26.14/mobile/jsbridgex.git" }
+  s.source       = { :git => "https://github.com/uwunmn/JSBridgeX.git" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
