@@ -21,9 +21,9 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     public static let CODE_INVALID_PARAMETER = 403
     public static let CODE_BAD_BRIDGE = 503
     
-    private let JBX_SCHEME = "torlaxbridge"
-    private let JBX_HOST = "__TORLAX_HOST__"
-    private let JBX_PATH = "/__TORLAX_EVENT__"
+    private let JBX_SCHEME = "jsbridgex"
+    private let JBX_HOST = "__JBX_HOST__"
+    private let JBX_PATH = "/__JBX_EVENT__"
     
     private let JBX_JS_OBJECT = "JSBridge"
     private let JBX_JS_METHOD_FETCH_MESSAGE_QUEUE = "fetchMessageQueue"

@@ -8,9 +8,9 @@
     var CODE_INVALID_PARAMETER = 403
     var CODE_BAD_BRIDGE = 503
 
-    var JBX_SCHEME = "torlaxbridge";
-    var JBX_HOST = "__TORLAX_HOST__";
-    var JBX_PATH = "/__TORLAX_EVENT__";
+    var JBX_SCHEME = "jsbridgex";
+    var JBX_HOST = "__JBX_HOST__";
+    var JBX_PATH = "/__JBX_EVENT__";
 
     var JBX_METHOD_SEND = "SEND";
     var JBX_METHOD_CALLBACK = "CALLBACK";

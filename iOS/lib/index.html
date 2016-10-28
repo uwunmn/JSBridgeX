@@ -29,25 +29,18 @@
 </head>
 
 <body>
-    <h1>JSBridge Demo</h1>
+    <h1>JSBridgeX Demo</h1>
     <script>
         window.JSBridgeLog = (function(){
             var uniqueId = 0;
             function log(message, data) {
-                console.log("JSBridge: Log:[MSG]:"+message+" -> "+data);
+                console.log(message+" -> "+data);
                 uniqueId++;
-        
-                var obj			= getJsonObj(data);
-                var str			= getJsonString(obj);
-                var logMsgStr	= uniqueId + '. ' + message + ':<br>' + str;
-                var logMsgObj	= uniqueId + '. ' + message + ':<br>' + obj;
-                console.log("JSBridge: Log:[OBJ]:"+logMsgObj);
-                console.log("JSBridge: Log:[STR]:"+logMsgStr);
                         
                 var log = document.getElementById('log');
                 var el = document.createElement('div');
                 el.className = 'logLine';
-                el.innerHTML = logMsgStr;
+                el.innerHTML = uniqueId + '. ' + message + ':<br>' + data;
                 if (log.children.length) { log.insertBefore(el, log.children[0]); }
                 else { log.appendChild(el); }
             }
@@ -84,11 +77,13 @@
 
         connectJSBridge(function(bridge) {
             bridge.init(function(message) {
-                log(JSON.stringify(message));
+                log('Undefined Event', JSON.stringify(message));
             });
 
             window.sendMessage = function() {
-                bridge.listAllEvents();
+                bridge.send('Hello', null, function(code, data) {
+                    log('Hello response', 'code: ' + code + ', data: ' + JSON.stringify(data));
+                });
             };
 
             bridge.registerEvent('SendMessage', function(data, callback) {
