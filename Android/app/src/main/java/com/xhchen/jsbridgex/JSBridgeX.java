@@ -27,6 +27,11 @@ import java.util.Map;
  */
 @SuppressLint({"addJavascriptInterface", "setJavaScriptEnabled"})
 public final class JSBridgeX {
+    public static final int CODE_SUCCESS = 200;
+    public static final int CODE_NOT_FOUND = 404;
+    public static final int CODE_INVALID_PARAMETER = 403;
+    public static final int CODE_BAD_BRIDGE = 503;
+
     private static final String JS_BRIDGE_NAME = "JSBridge.js";
 
     private static final String JBX_JS_OBJECT = "JSBridge";
@@ -50,14 +55,16 @@ public final class JSBridgeX {
     private JSONArray postMessageQueue = new JSONArray();
     private Map<String, EventCallback> eventCallbacks = new HashMap<>();
     private Map<String, EventHandler> eventMap = new HashMap<>();
+    private DefaultEventHandler defaultEventHandler;
 
     public JSBridgeX(Context context) {
         this.injectedJS = loadInjectedJS(context);
     }
 
-    public void init(WebView webView, WebViewClientInterface webViewClient) {
+    public void init(WebView webView, WebViewClientInterface webViewClient, DefaultEventHandler defaultEventHandler) {
         this.webView = webView;
         this.webViewClientInterface = webViewClient;
+        this.defaultEventHandler = defaultEventHandler;
         if (webView != null) {
             webView.getSettings().setJavaScriptEnabled(true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -133,13 +140,13 @@ public final class JSBridgeX {
         }
     }
 
-    public void putEvent(String eventName, EventHandler callback) {
+    public void registerEvent(String eventName, EventHandler callback) {
         if (TextUtils.isEmpty(eventName) || callback == null)
             return;
         eventMap.put(eventName, callback);
     }
 
-    public void removeEvent(String eventName) {
+    public void unregisterEvent(String eventName) {
         if (TextUtils.isEmpty(eventName))
             return;
         eventMap.remove(eventName);
@@ -208,6 +215,33 @@ public final class JSBridgeX {
         return contents;
     }
 
+    private String getString(JSONObject jsonObject, String key) {
+        try {
+            return jsonObject.getString(key);
+        } catch (JSONException e) {
+            Log.d("[JSBridgeX]", "key: " + key + " was not found");
+        }
+        return "";
+    }
+
+    private int getInt(JSONObject jsonObject, String key) {
+        try {
+            return jsonObject.getInt(key);
+        } catch (JSONException e) {
+            Log.d("[JSBridgeX]", "key: " + key + " was not found");
+        }
+        return 0;
+    }
+
+    private JSONObject getJSONObject(JSONObject jsonObject, String key) {
+        try {
+            return jsonObject.getJSONObject(key);
+        } catch (JSONException e) {
+            Log.d("[JSBridgeX]", "key: " + key + " was not found");
+        }
+        return null;
+    }
+
     private class JSInterface {
         @JavascriptInterface
         public void dispatchMessageQueueFromJS(String messages) {
@@ -216,7 +250,7 @@ public final class JSBridgeX {
                 JSONArray messageArray = new JSONArray(messages);
                 for (int i = 0; i < messageArray.length(); i++) {
                     JSONObject message = messageArray.getJSONObject(i);
-                    final String method = message.getString(JBX_KEY_METHOD);
+                    final String method = getString(message, JBX_KEY_METHOD);
                     if (method.equalsIgnoreCase(JBX_METHOD_SEND)) {
                         handleMessageSentFromJS(message);
                     } else if (method.equalsIgnoreCase(JBX_METHOD_CALLBACK)) {
@@ -229,8 +263,8 @@ public final class JSBridgeX {
         }
 
         private void handleMessageSentFromJS(JSONObject message) throws JSONException {
-            final String callbackId = message.getString(JBX_KEY_CALLBACK_ID);
-            final String eventName = message.getString(JBX_KEY_EVENT_NAME);
+            final String callbackId = getString(message, JBX_KEY_CALLBACK_ID);
+            final String eventName = getString(message, JBX_KEY_EVENT_NAME);
             EventCallback callback = null;
             if (!TextUtils.isEmpty(callbackId)) {
                 callback = new EventCallback(){
@@ -244,28 +278,32 @@ public final class JSBridgeX {
             }
             if (!TextUtils.isEmpty(eventName)) {
                 EventHandler eventHandler = eventMap.get(eventName);
+                JSONObject data = getJSONObject(message, JBX_KEY_DATA);
                 if (eventHandler != null) {
-                    JSONObject data = message.getJSONObject(JBX_KEY_DATA);
                     eventHandler.onHandle(data, callback);
-                    return;
+                } else if(defaultEventHandler != null) {
+                    defaultEventHandler.onHandle(eventName, data, callback);
                 }
+                return;
             }
 
             if (callback != null) {
-                JSONObject data = new JSONObject();
-                data.put(JBX_KEY_DESCRIPTION, "NOT FOUND");
-                callback.onCallback(404, data);
+                callback.onCallback(CODE_INVALID_PARAMETER, null);
             }
         }
 
-        private void handleMessageCallbackFromJS(JSONObject message) throws JSONException {
-            final String callbackId = message.getString(JBX_KEY_CALLBACK_ID);
+        private void handleMessageCallbackFromJS(JSONObject message) {
+            final String callbackId = getString(message, JBX_KEY_CALLBACK_ID);
             if (TextUtils.isEmpty(callbackId)) {
                 EventCallback eventCallback = eventCallbacks.get(callbackId);
                 if (eventCallback != null) {
-                    final int code = message.getInt(JBX_KEY_CODE);
-                    final JSONObject data = message.getJSONObject(JBX_KEY_DATA);
-                    eventCallback.onCallback(code, data);
+                    final int code = getInt(message, JBX_KEY_CODE);
+                    if (code != 0) {
+                        final JSONObject data = getJSONObject(message, JBX_KEY_DATA);
+                        eventCallback.onCallback(code, data);
+                    } else {
+                        eventCallback.onCallback(CODE_INVALID_PARAMETER, null);
+                    }
                 }
             }
         }
@@ -277,6 +315,10 @@ public final class JSBridgeX {
 
     public interface EventHandler {
         void onHandle(JSONObject data, EventCallback callback);
+    }
+
+    public interface DefaultEventHandler {
+        void onHandle(String eventName, JSONObject data, EventCallback callback);
     }
 
     public interface WebViewClientInterface {

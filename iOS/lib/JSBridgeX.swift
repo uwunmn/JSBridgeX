@@ -14,7 +14,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
  
     public typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
     public typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
-    public typealias MessageHandler = (message: Message) -> Void
+    public typealias DefaultEventHandler = (eventName: String, data: [String: AnyObject]?, callback: EventCallback?) -> Void
     
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
@@ -39,9 +39,9 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     private var eventCallbacks: [String: EventCallback] = [: ]
     private var postMessageQueue: [Message]! = []
     private var eventUniqueId = 0
-    private let defaultMessageHandler: MessageHandler
+    private let defaultMessageHandler: DefaultEventHandler?
     
-    public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?, defaultMessageHandler: MessageHandler) {
+    public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?, defaultMessageHandler: DefaultEventHandler?) {
         self.webView = webView
         self.webViewDelegate = webViewDelegate
         self.defaultMessageHandler = defaultMessageHandler
@@ -150,7 +150,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     private func handleMessageSentFromJS(message: Message) {
         let callbackId = message.callbackId
         let eventName = message.eventName
-        var callbackBlock: EventCallback? = nil
+        var callbackBlock: EventCallback?
         if callbackId != nil {
             callbackBlock = { [weak self] (code: Int, data: [String: AnyObject]?) in
                 if let weakSelf = self {
@@ -158,11 +158,15 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
                 }
             }
         }
-        if let eventName = eventName, let eventHandler = eventMap[eventName] {
-            eventHandler(data: message.data, callback: callbackBlock)
+        if let eventName = eventName {
+            if let eventHandler = eventMap[eventName] {
+                eventHandler(data: message.data, callback: callbackBlock)
+            } else {
+                defaultMessageHandler?(eventName: eventName, data: message.data, callback: callbackBlock)
+            }
             return
         }
-        defaultMessageHandler(message: message)
+        callbackBlock?(code: JSBridgeX.CODE_INVALID_PARAMETER, data: nil)
     }
     
     private func handleMessageCallbackFromJS(message: Message) {
