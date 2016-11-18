@@ -23,9 +23,10 @@ class ViewController: UIViewController, UIWebViewDelegate {
         button.setTitle("Send", forState: .Normal)
         self.view.addSubview(button)
         button.addTarget(self, action: #selector(onClickSend), forControlEvents: .TouchUpInside)
-        jsBridge = JSBridgeX(webView: self.webView, webViewDelegate: self, defaultMessageHandler: { (message) in
-            print("default: \(message.toString())")
-        })
+        jsBridge = JSBridgeX(webView: self.webView, webViewDelegate: self) { (eventName, data, callback) in
+            print("default: \(eventName)")
+
+        }
         let htmlPath = NSBundle.mainBundle().pathForResource("index", ofType: "html")!
         print("htmlPath: \(htmlPath)")
         do {

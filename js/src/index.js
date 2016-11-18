@@ -118,7 +118,7 @@
         }
         var eventCallback = eventCallbacks[callbackId];
         if (eventCallback) {
-            eventCallback(message.code, message.data);
+            eventCallback(message.data, message.code);
         }
     }
 

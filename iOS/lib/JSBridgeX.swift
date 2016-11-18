@@ -120,7 +120,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_FETCH_MESSAGE_QUEUE)()"
         if let messageString = self.webView.stringByEvaluatingJavaScriptFromString(jsMethod),
             let messageData = messageString.dataUsingEncoding(NSUTF8StringEncoding) {
-            print("[JSBridgeX]\(messageString)")
+            log(messageString)
             let rawMessages = parseMessageQueue(messageData)
             for rawMessage in rawMessages {
                 if let message = Message(rawDict: rawMessage) {
@@ -190,10 +190,17 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     
     private func postMessageToJS(message: Message) {
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_POST_MESSAGE_TO_JS)(\(message.toString()))"
-        print("[JSBridgeX]\(jsMethod)")
+        log(jsMethod)
         self.webView.stringByEvaluatingJavaScriptFromString(jsMethod)
     }
     
+    private func log(items: Any..., _ line:Int = #line) {
+        let file: NSString = #file
+        var iii = items
+        iii.append(("\(file.lastPathComponent)(\(line))" as Any))
+        print("aa")
+    }
+
     //MARK: - UIWebViewDelegate
     
     public func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
@@ -205,7 +212,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         let url = request.URL
         if let scheme = url?.scheme where scheme == JBX_SCHEME {
             if let host = url?.host where host == JBX_HOST {
-                print(url?.relativePath)
+                log(url?.relativePath)
                 if let path = url?.relativePath where path == JBX_PATH {
                     self.dispatchMessageQueueFromJS()
                 }
