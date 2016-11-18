@@ -81,7 +81,7 @@
             });
 
             window.sendMessage = function() {
-                bridge.send('Hello', null, function(code, data) {
+                bridge.send('Hello', null, function(data, code) {
                     log('Hello response', 'code: ' + code + ', data: ' + JSON.stringify(data));
                 });
             };

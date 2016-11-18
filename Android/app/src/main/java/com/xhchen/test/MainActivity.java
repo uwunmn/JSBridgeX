@@ -28,7 +28,7 @@ public class MainActivity extends Activity implements JSBridgeX.WebViewClientInt
         jsBridge = new JSBridgeX(this);
         jsBridge.init(webView, this, new JSBridgeX.DefaultEventHandler() {
             @Override
-            public void onHandle(String eventName, JSONObject data, JSBridgeX.EventCallback callback) {
+            public void onHandle(String eventName, Object data, JSBridgeX.EventCallback callback) {
                 Log.d("[JSBridgeX]", "eventName: " + eventName + " was not found");
                 if (callback != null) {
                     callback.onCallback(JSBridgeX.CODE_NOT_FOUND, null);
@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements JSBridgeX.WebViewClientInt
         jsBridge.registerEvent("SendMessageFromJS", new JSBridgeX.EventHandler() {
 
             @Override
-            public void onHandle(JSONObject data, JSBridgeX.EventCallback callback) {
+            public void onHandle(Object data, JSBridgeX.EventCallback callback) {
                 Log.d("[JSBridgeX]", "[SendMessageFromJS] data: " + data.toString());
                 try {
                     JSONObject responseData = new JSONObject();
@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements JSBridgeX.WebViewClientInt
             jsBridge.send("SendMessage", data, new JSBridgeX.EventCallback(){
 
                 @Override
-                public void onCallback(int code, JSONObject data) {
+                public void onCallback(int code, Object data) {
                     Log.d("[JSBridgeX]", "code: " + code + ", data: " + data.toString());
                 }
             });
