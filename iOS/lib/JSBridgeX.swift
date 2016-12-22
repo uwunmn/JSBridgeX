@@ -199,7 +199,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         let dateFormater = NSDateFormatter()
         dateFormater.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         let date = dateFormater.stringFromDate(NSDate())
-        let result = "JSBridgeX|\(date) \(file.lastPathComponent)[\(line)]: \(message)"
+        let result = "JSX|\(date) [\(line)]: \(message)"
         print(result, separator: "", terminator: "\n")
     }
 
@@ -214,7 +214,6 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         let url = request.URL
         if let scheme = url?.scheme where scheme == JBX_SCHEME {
             if let host = url?.host where host == JBX_HOST {
-                log(url?.relativePath)
                 if let path = url?.relativePath where path == JBX_PATH {
                     self.dispatchMessageQueueFromJS()
                 }
