@@ -12,9 +12,9 @@ import UIKit
 
 public class JSBridgeX: NSObject, UIWebViewDelegate {
  
-    public typealias EventCallback = (code: Int, data: [String: AnyObject]?) -> Void
-    public typealias EventHandler = (data: [String: AnyObject]?, callback: EventCallback?) -> Void
-    public typealias DefaultEventHandler = (eventName: String, data: [String: AnyObject]?, callback: EventCallback?) -> Void
+    public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
+    public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
+    public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
     
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
@@ -65,8 +65,8 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         self.webView?.loadRequest(NSURLRequest(URL: url))
     }
     
-    public func loadHTMLString(string: String, baseURL: NSURL?) {
-        self.webView?.loadHTMLString(string, baseURL: baseURL)
+    public func loadHTMLString(htmlString: String, baseURL: NSURL?) {
+        self.webView?.loadHTMLString(htmlString, baseURL: baseURL)
     }
     
     public func registerEvent(eventName: String, handler: EventHandler) {
@@ -77,7 +77,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         eventMap.removeValueForKey(eventName)
     }
     
-    public func send(eventName: String, data: [String: AnyObject]?, callback: EventCallback?) {
+    public func send(eventName: String, data: AnyObject?, callback: EventCallback?) {
         let message = Message(method: JBX_METHOD_SEND)
         message.eventName = eventName
         message.data = data
@@ -92,7 +92,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     
     //MARK: - private
     
-    private func callback(code: Int, callbackId: String, data: [String: AnyObject]?) {
+    private func callback(code: Int, callbackId: String, data: AnyObject?) {
         let message = Message(method: JBX_METHOD_CALLBACK)
         message.code = code
         message.callbackId = callbackId
@@ -121,14 +121,12 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         if let messageString = self.webView?.stringByEvaluatingJavaScriptFromString(jsMethod),
             let messageData = messageString.dataUsingEncoding(NSUTF8StringEncoding) {
             log("dispatchMessageQueueFromJS:\(messageString)")
-            let rawMessages = parseMessageQueue(messageData)
-            for rawMessage in rawMessages {
-                if let message = Message(rawDict: rawMessage) {
-                    if message.method == JBX_METHOD_SEND {
-                        handleMessageSentFromJS(message)
-                    } else if message.method == JBX_METHOD_CALLBACK {
-                        handleMessageCallbackFromJS(message)
-                    }
+            let messages = parseMessageQueue(messageData)
+            for message in messages {
+                if message.method == JBX_METHOD_SEND {
+                    handleMessageSentFromJS(message)
+                } else if message.method == JBX_METHOD_CALLBACK {
+                    handleMessageCallbackFromJS(message)
                 }
             }
             return false
@@ -136,10 +134,12 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         return true
     }
     
-    private func parseMessageQueue(data: NSData) -> [[String: AnyObject]] {
+    private func parseMessageQueue(data: NSData) -> [Message] {
         do {
             if let messages = try NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments) as? [[String: AnyObject]] {
-                return messages
+                return messages.flatMap({ (dict) -> Message? in
+                    return Message(rawDict: dict)
+                })
             }
         } catch {
             
@@ -152,10 +152,8 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         let eventName = message.eventName
         var callbackBlock: EventCallback?
         if callbackId != nil {
-            callbackBlock = { [weak self] (code: Int, data: [String: AnyObject]?) in
-                if let weakSelf = self {
-                    weakSelf.callback(code, callbackId: callbackId!, data: data)
-                }
+            callbackBlock = { [weak self] (code: Int, data: AnyObject?) in
+                self?.callback(code, callbackId: callbackId!, data: data)
             }
         }
         if let eventName = eventName {
@@ -283,7 +281,7 @@ public class Message {
             self.dict[JBX_KEY_CODE] = self.code
         }
     }
-    public var data: [String: AnyObject]? {
+    public var data: AnyObject? {
         didSet {
             self.dict[JBX_KEY_DATA] = self.data
         }
@@ -305,7 +303,7 @@ public class Message {
             self.method = method
             self.eventName = rawDict[JBX_KEY_EVENT_NAME] as? String
             self.code = rawDict[JBX_KEY_CODE] as? Int
-            self.data = rawDict[JBX_KEY_DATA] as? [String: AnyObject]
+            self.data = rawDict[JBX_KEY_DATA]
             self.callbackId = rawDict[JBX_KEY_CALLBACK_ID] as? String
             dict = rawDict
             return
