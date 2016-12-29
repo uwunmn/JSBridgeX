@@ -19,7 +19,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
     public static let CODE_INVALID_PARAMETER = 403
-    public static let CODE_BAD_BRIDGE = 503
+    public static let CODE_INTERNAL_ERROR = 405
     
     private let JBX_SCHEME = "jsbridgex"
     private let JBX_HOST = "__JBX_HOST__"
