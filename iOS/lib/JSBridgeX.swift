@@ -179,7 +179,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     }
     
     private func postMessage(message: Message) {
-        log("postMessage:\(message.toString())")
+        log("postMessage:\(message.description)")
         if postMessageQueue != nil {
             postMessageQueue!.append(message)
         } else {
@@ -291,6 +291,17 @@ public class Message {
             self.dict[JBX_KEY_CALLBACK_ID] = self.callbackId
         }
     }
+    
+    public var description: String {
+        do {
+            let data = try NSJSONSerialization.dataWithJSONObject(self.dict, options: .PrettyPrinted)
+            return String(data: data, encoding: NSUTF8StringEncoding) ?? ""
+        } catch {
+            
+        }
+        return ""
+    }
+    
     private var dict: [String: AnyObject] = [:]
     
     public init(method: String) {
