@@ -15,12 +15,15 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
     public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
     public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
+    public typealias LogClosure = (message: String, file: NSString, line: Int, column: Int, function: String) -> Void
     
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
     public static let CODE_INVALID_PARAMETER = 403
     public static let CODE_INTERNAL_ERROR = 405
     
+    public var logClosure: LogClosure?
+
     private let JBX_SCHEME = "jsbridgex"
     private let JBX_HOST = "__JBX_HOST__"
     private let JBX_PATH = "/__JBX_EVENT__"
@@ -120,7 +123,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_FETCH_MESSAGE_QUEUE)()"
         if let messageString = self.webView?.stringByEvaluatingJavaScriptFromString(jsMethod),
             let messageData = messageString.dataUsingEncoding(NSUTF8StringEncoding) {
-            log("dispatchMessageQueueFromJS:\(messageString)")
+            log("dispatchMessageQueueFromJS:", messageString)
             let messages = parseMessageQueue(messageData)
             for message in messages {
                 if message.method == JBX_METHOD_SEND {
@@ -179,7 +182,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     }
     
     private func postMessage(message: Message) {
-        log("postMessage:\(message.description)")
+        log("postMessage:", message.description)
         if postMessageQueue != nil {
             postMessageQueue!.append(message)
         } else {
@@ -194,11 +197,15 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     
     private func log(items: Any..., separator: String = " ", terminator: String = "\n", file: NSString = #file, line: Int = #line, column: Int = #column, function: String = #function) {
         let message = items.map({ String($0) }).joinWithSeparator(separator)
-        let dateFormater = NSDateFormatter()
-        dateFormater.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        let date = dateFormater.stringFromDate(NSDate())
-        let result = "JSX|\(date) [\(line)]: \(message)"
-        print(result, separator: "", terminator: "\n")
+        if let logClosure = self.logClosure {
+            logClosure(message: message, file: file, line: line, column: column, function: function)
+        } else {
+            let dateFormater = NSDateFormatter()
+            dateFormater.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+            let date = dateFormater.stringFromDate(NSDate())
+            let result = "JSX|\(date) [\(line)]: \(message)"
+            print(result, separator: "", terminator: "\n")
+        }
     }
 
     //MARK: - UIWebViewDelegate
