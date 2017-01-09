@@ -4,12 +4,15 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.http.SslError;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -30,6 +33,7 @@ public final class JSBridgeX {
     public static final int CODE_SUCCESS = 200;
     public static final int CODE_NOT_FOUND = 404;
     public static final int CODE_INVALID_PARAMETER = 403;
+    public static final int CODE_ERROR = 405;
     public static final int CODE_BAD_BRIDGE = 503;
 
     private static final String JS_BRIDGE_NAME = "JSBridge.js";
@@ -118,7 +122,13 @@ public final class JSBridgeX {
                     }
                 }
 
-                @TargetApi(android.os.Build.VERSION_CODES.M)
+                @Override
+                public void onReceivedSslError(WebView view, SslErrorHandler handler,
+                                               SslError error) {
+                    handler.proceed();
+                }
+
+                @TargetApi(Build.VERSION_CODES.M)
                 @Override
                 public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                     onReceivedError(view, error.getErrorCode(), error.getDescription().toString(), request.getUrl().toString());
@@ -130,6 +140,17 @@ public final class JSBridgeX {
                         webViewClientInterface.onReceivedError(view, errorCode, description, failingUrl);
                     }
                 }
+
+                @Override
+                public WebResourceResponse shouldInterceptRequest(WebView view,
+                                                                  String url) {
+                    if (webViewClientInterface != null && webViewClientInterface.isInterceptUrl(url)) {
+                        WebResourceResponse response = webViewClientInterface.getWebResourceResponse(view, url);
+                        return response!=null?response:super.shouldInterceptRequest(view,url);
+                    }
+                    return super.shouldInterceptRequest(view,url);
+                }
+
             });
         }
     }
@@ -301,5 +322,9 @@ public final class JSBridgeX {
         void onPageFinished(WebView view, String url);
 
         void onReceivedError(WebView view, int errorCode, String description, String failingUrl);
+
+        WebResourceResponse getWebResourceResponse(WebView view, String url);
+
+        boolean isInterceptUrl(String url);
     }
 }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import com.xhchen.jsbridgex.JSBridgeX;
@@ -86,5 +87,15 @@ public class MainActivity extends Activity implements JSBridgeX.WebViewClientInt
     @Override
     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
 
+    }
+
+    @Override
+    public WebResourceResponse getWebResourceResponse(WebView view, String url) {
+        return null;
+    }
+
+    @Override
+    public boolean isInterceptUrl(String url) {
+        return false;
     }
 }
