@@ -1,25 +1,25 @@
 'use strict';
 
-(function (w, doc) {
+(function(w, doc) {
     if (w.JSBridge) return;
 
-    var CODE_SUCCESS = 200
-    var CODE_NOT_FOUND = 404
-    var CODE_INVALID_PARAMETER = 403
-    var CODE_BAD_BRIDGE = 503
+    var CODE_SUCCESS = 200;
+    var CODE_NOT_FOUND = 404;
+    var CODE_INVALID_PARAMETER = 403;
+    var CODE_BAD_BRIDGE = 503;
 
-    var JBX_SCHEME = "jsbridgex";
-    var JBX_HOST = "__JBX_HOST__";
-    var JBX_PATH = "/__JBX_EVENT__";
+    var JBX_SCHEME = 'jsbridgex';
+    var JBX_HOST = '__JBX_HOST__';
+    var JBX_PATH = '/__JBX_EVENT__';
 
-    var JBX_METHOD_SEND = "SEND";
-    var JBX_METHOD_CALLBACK = "CALLBACK";
+    var JBX_METHOD_SEND = 'SEND';
+    var JBX_METHOD_CALLBACK = 'CALLBACK';
 
-    var JBX_KEY_METHOD = "method";
-    var JBX_KEY_EVENT_NAME = "eventName";
-    var JBX_KEY_DATA = "data";
-    var JBX_KEY_CODE = "code";
-    var JBX_KEY_CALLBACK_ID = "callbackId";
+    var JBX_KEY_METHOD = 'method';
+    var JBX_KEY_EVENT_NAME = 'eventName';
+    var JBX_KEY_DATA = 'data';
+    var JBX_KEY_CODE = 'code';
+    var JBX_KEY_CALLBACK_ID = 'callbackId';
 
     var ua = navigator.userAgent;
     var isIOSDevice = /i(Phone|Pod|Pad|OS)/g.test(ua);
@@ -32,7 +32,7 @@
     var messageHandler;
 
     function init(defaultMessageHandler) {
-        messageHandler = defaultMessageHandler
+        messageHandler = defaultMessageHandler;
     }
 
     function registerEvent(eventName, eventHandler) {
@@ -55,7 +55,7 @@
         if (data) {
             message[JBX_KEY_DATA] = data;
         }
-        if (eventCallback) {
+        if (typeof eventCallback === 'function') {
             var callbackId = 'js_cb_' + (eventUniqueId++) + '_' + new Date().getTime();
             eventCallbacks[callbackId] = eventCallback;
             message[JBX_KEY_CALLBACK_ID] = callbackId;
@@ -66,23 +66,23 @@
     function callback(code, callbackId, data) {
         var message = {};
         message[JBX_KEY_METHOD] = JBX_METHOD_CALLBACK;
-        message[JBX_KEY_CODE] = code
-        message[JBX_KEY_CALLBACK_ID] = callbackId
+        message[JBX_KEY_CODE] = code;
+        message[JBX_KEY_CALLBACK_ID] = callbackId;
         if (data) {
-            message[JBX_KEY_DATA] = data
+            message[JBX_KEY_DATA] = data;
         }
         postMessageToNative(message);
     }
 
     function listAllEvents() {
-        send("listAllEvents", null, function (code, data) { 
+        send('listAllEvents', null, function(code, data) {
             console.log('Events: ' + JSON.stringify(data.Events));
         });
     }
 
     function dispatchMessageFromNative(message) {
         console.log('dispatchMessageFromNative: ' + JSON.stringify(message));
-        setTimeout(function () {
+        setTimeout(function() {
             try {
                 if (message.method == JBX_METHOD_SEND) {
                     handleMessageSentFromNative(message);
@@ -99,25 +99,25 @@
         console.log('handleMessageSentFromNative');
         var callbackId = message.callbackId;
         var eventHandler = eventMap[message.eventName];
-        if (eventHandler) {
-            eventHandler(message.data, function (code, responseData) {
+        if (typeof eventHandler === 'function') {
+            eventHandler(message.data, function(code, responseData) {
                 if (callbackId) {
                     callback(code, callbackId, responseData);
                 }
             });
             return;
         }
-        messageHandler(message);
+        typeof messageHandler === 'function' && messageHandler(message);
     }
 
     function handleMessageCallbackFromNative(message) {
         console.log('handleMessageCallbackFromNative');
         var callbackId = message.callbackId;
-        if (callbackId === undefined) {
+        if (callbackId) {
             return;
         }
         var eventCallback = eventCallbacks[callbackId];
-        if (eventCallback) {
+        if (typeof eventCallback === 'function') {
             eventCallback(message.data, message.code);
         }
     }
@@ -130,7 +130,7 @@
     function triggerNativeCall() {
         if (isIOSDevice) {
             messagingIframe.src = JBX_SCHEME + '://' + JBX_HOST + JBX_PATH;
-        } else {
+        } else if (isAndroidDevice) {
             try {
                 AndroidAPI.dispatchMessageQueueFromJS(fetchMessageQueue());
             } catch (e) {
@@ -149,7 +149,7 @@
         } catch (e) {
             console.log(e);
         }
-        return []
+        return [];
     }
 
     w.JSBridge = {
@@ -159,8 +159,8 @@
         send: send.bind(this),
         dispatchMessageFromNative: dispatchMessageFromNative.bind(this),
         fetchMessageQueue: fetchMessageQueue.bind(this),
-        listAllEvents: listAllEvents.bind(this),
-    }
+        listAllEvents: listAllEvents.bind(this)
+    };
 
     messagingIframe = doc.createElement('iframe');
     messagingIframe.style.display = 'none';
@@ -171,5 +171,4 @@
     readyEvent.initEvent('JSBridgeReady');
     readyEvent.bridge = JSBridge;
     doc.dispatchEvent(readyEvent);
-
 })(window, document);

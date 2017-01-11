@@ -10,21 +10,21 @@ var paths = {
     iosPath: '../iOS/lib/'
 };
 
-gulp.task('clean:build', function () {
+gulp.task('clean:build', function() {
     return del(paths.build + '*');
 });
 
-gulp.task('clean:android', function () {
+gulp.task('clean:android', function() {
     return del([paths.androidPath + '*.js', paths.androidPath + '*.html'], { force: true });
 });
 
-gulp.task('clean:ios', function () {
+gulp.task('clean:ios', function() {
     return del([paths.iosPath + '*.js', paths.iosPath + '*.html'], { force: true });
 });
 
 gulp.task('clean', ['clean:build', 'clean:android', 'clean:ios']);
 
-gulp.task('index', function () { 
+gulp.task('index', function() {
     gulp.src('./src/index.html')
         .pipe(gulp.dest(paths.build))
         .pipe(gulp.dest(paths.androidPath))
@@ -39,7 +39,7 @@ gulp.task('index', function () {
 //         .pipe(gulp.dest(paths.iosPath));
 // });
 
-gulp.task('js', function () { 
+gulp.task('js', function() {
     gulp.src('./src/*.js')
         .pipe(plugins.uglify())
         .pipe(gulp.dest(paths.build))
@@ -60,6 +60,6 @@ gulp.task('build:product', ['clean', 'build:android:product', 'build:ios:product
 gulp.task('build', ['clean', 'build:android', 'build:ios']);
 
 gulp.task('watch', function() {
-    gulp.watch(['src/*.js', 'src/*.html'], ['build']);    
+    gulp.watch(['src/*.js', 'src/*.html'], ['build']);
 });
 
