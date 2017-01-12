@@ -84,10 +84,10 @@
         console.log('dispatchMessageFromNative: ' + JSON.stringify(message));
         setTimeout(function() {
             try {
-                if (message.method == JBX_METHOD_SEND) {
+                if (message.method === JBX_METHOD_SEND) {
                     handleMessageSentFromNative(message);
-                } else if (message.method == JBX_METHOD_CALLBACK) {
-                    handleMessageCallbackFromNative(message)
+                } else if (message.method === JBX_METHOD_CALLBACK) {
+                    handleMessageCallbackFromNative(message);
                 }
             } catch (e) {
                 console.log(e);
@@ -114,11 +114,8 @@
         console.log('handleMessageCallbackFromNative');
         var callbackId = message.callbackId;
         if (callbackId) {
-            return;
-        }
-        var eventCallback = eventCallbacks[callbackId];
-        if (typeof eventCallback === 'function') {
-            eventCallback(message.data, message.code);
+            var eventCallback = eventCallbacks[callbackId];
+            typeof eventCallback === 'function' && eventCallback(message.data, message.code);
         }
     }
 
@@ -143,7 +140,7 @@
         try {
             var messages = sendMessages;
             sendMessages = [];
-            var messageString = JSON.stringify(messages)
+            var messageString = JSON.stringify(messages);
             console.log('[fetchMessageQueue] messages: ' + messageString);
             return messageString;
         } catch (e) {
