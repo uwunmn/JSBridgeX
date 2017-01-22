@@ -8,15 +8,13 @@
 
 import UIKit
 
+public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
+public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
+public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
+public typealias LogClosure = (message: String, file: NSString, line: Int, column: Int, function: String) -> Void
 
+public class JSBridgeX: NSObject {
 
-public class JSBridgeX: NSObject, UIWebViewDelegate {
- 
-    public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
-    public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
-    public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
-    public typealias LogClosure = (message: String, file: NSString, line: Int, column: Int, function: String) -> Void
-    
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
     public static let CODE_INVALID_PARAMETER = 403
@@ -24,19 +22,18 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     
     public var logClosure: LogClosure?
 
-    private let JBX_SCHEME = "jsbridgex"
-    private let JBX_HOST = "__JBX_HOST__"
-    private let JBX_PATH = "/__JBX_EVENT__"
+    public let JBX_SCHEME = "jsbridgex"
+    public let JBX_HOST = "__JBX_HOST__"
+    public let JBX_PATH = "/__JBX_EVENT__"
     
-    private let JBX_JS_OBJECT = "JSBridge"
+    public let JBX_JS_OBJECT = "JSBridge"
     private let JBX_JS_METHOD_FETCH_MESSAGE_QUEUE = "fetchMessageQueue"
     private let JBX_JS_METHOD_POST_MESSAGE_TO_JS = "dispatchMessageFromNative"
     
     private let JBX_METHOD_SEND = "SEND"
     private let JBX_METHOD_CALLBACK = "CALLBACK"
     
-    private weak var webView: UIWebView?
-    private weak var webViewDelegate: UIWebViewDelegate?
+    private weak var webView: WebViewProtocol?
     private var injectedJS: String = ""
     private var eventMap: [String: EventHandler] = [: ]
     private var eventCallbacks: [String: EventCallback] = [: ]
@@ -44,12 +41,10 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     private var eventUniqueId = 0
     private let defaultMessageHandler: DefaultEventHandler?
     
-    public init(webView: UIWebView, webViewDelegate: UIWebViewDelegate?, defaultMessageHandler: DefaultEventHandler?) {
+    public init(webView: WebViewProtocol, defaultMessageHandler: DefaultEventHandler?) {
         self.webView = webView
-        self.webViewDelegate = webViewDelegate
         self.defaultMessageHandler = defaultMessageHandler
         super.init()
-        self.webView?.delegate = self
         self.injectedJS = self.loadInjectedJS()
         registerEvent("listAllEvents") { (data, callback) in
             let events = [String](self.eventMap.keys)
@@ -58,18 +53,13 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     }
     
     deinit {
-        self.webViewDelegate = nil
-        self.webView?.delegate = nil
+        self.webView = nil
     }
     
     //MARK: - internal property
     
     public func loadURL(url: NSURL) {
-        self.webView?.loadRequest(NSURLRequest(URL: url))
-    }
-    
-    public func loadHTMLString(htmlString: String, baseURL: NSURL?) {
-        self.webView?.loadHTMLString(htmlString, baseURL: baseURL)
+        self.webView?.loadUrl(url)
     }
     
     public func registerEvent(eventName: String, handler: EventHandler) {
@@ -91,6 +81,34 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
             eventCallbacks[callbackId] = callback
         }
         postMessage(message)
+    }
+    
+    public func interceptRequest(request: NSURLRequest) -> Bool {
+        let url = request.URL
+        if let scheme = url?.scheme where scheme == JBX_SCHEME {
+            if let host = url?.host where host == JBX_HOST {
+                if let path = url?.relativePath where path == JBX_PATH {
+                    self.dispatchMessageQueueFromJS()
+                }
+            }
+            return true
+        }
+        return false
+    }
+    
+    public func injectBridgeToJS() {
+        self.webView?.executeJavaScript("typeof \(JBX_JS_OBJECT) == 'object'") { [weak self] (object, error) in
+            let result = (object as? String) ?? "false"
+            if result == "false" {
+                self?.webView?.executeJavaScript((self?.injectedJS)!, completionHandler: nil)
+                if let messages = self?.postMessageQueue {
+                    for message in messages {
+                        self?.postMessageToJS(message)
+                    }
+                    self?.postMessageQueue = nil
+                }
+            }
+        }
     }
     
     //MARK: - private
@@ -119,22 +137,27 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
         return ""
     }
     
-    private func dispatchMessageQueueFromJS() -> Bool {
+    private func dispatchMessageQueueFromJS(){
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_FETCH_MESSAGE_QUEUE)()"
-        if let messageString = self.webView?.stringByEvaluatingJavaScriptFromString(jsMethod),
-            let messageData = messageString.dataUsingEncoding(NSUTF8StringEncoding) {
-            log("dispatchMessageQueueFromJS:", messageString)
-            let messages = parseMessageQueue(messageData)
+        self.webView?.executeJavaScript(jsMethod) { [weak self] (object, error) in
+            if let messageString = object as? String {
+                self?.handleMessageQueueFromJS(messageString)
+            }
+        }
+    }
+    
+    private func handleMessageQueueFromJS(messageString: String) {
+        if let messageData = messageString.dataUsingEncoding(NSUTF8StringEncoding) {
+            self.log("dispatchMessageQueueFromJS:", messageString)
+            let messages = self.parseMessageQueue(messageData)
             for message in messages {
                 if message.method == JBX_METHOD_SEND {
-                    handleMessageSentFromJS(message)
+                    self.handleMessageSentFromJS(message)
                 } else if message.method == JBX_METHOD_CALLBACK {
-                    handleMessageCallbackFromJS(message)
+                    self.handleMessageCallbackFromJS(message)
                 }
             }
-            return false
         }
-        return true
     }
     
     private func parseMessageQueue(data: NSData) -> [Message] {
@@ -192,7 +215,7 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
     
     private func postMessageToJS(message: Message) {
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_POST_MESSAGE_TO_JS)(\(message.toString()))"
-        self.webView?.stringByEvaluatingJavaScriptFromString(jsMethod)
+        self.webView?.executeJavaScript(jsMethod, completionHandler: nil)
     }
     
     private func log(items: Any..., separator: String = " ", terminator: String = "\n", file: NSString = #file, line: Int = #line, column: Int = #column, function: String = #function) {
@@ -206,62 +229,6 @@ public class JSBridgeX: NSObject, UIWebViewDelegate {
             let result = "JSX|\(date) [\(line)]: \(message)"
             print(result, separator: "", terminator: "\n")
         }
-    }
-
-    //MARK: - UIWebViewDelegate
-    
-    public func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        
-        if webView != self.webView {
-            return true
-        }
-        
-        let url = request.URL
-        if let scheme = url?.scheme where scheme == JBX_SCHEME {
-            if let host = url?.host where host == JBX_HOST {
-                if let path = url?.relativePath where path == JBX_PATH {
-                    self.dispatchMessageQueueFromJS()
-                }
-            }
-            return false
-        } else {
-            if let delegate = webViewDelegate {
-                return delegate.webView?(webView, shouldStartLoadWithRequest: request, navigationType: navigationType) ?? true
-            }
-        }
-        return true
-    }
-    
-    public func webViewDidStartLoad(webView: UIWebView) {
-        if webView != self.webView {
-            return
-        }
-        self.webViewDelegate?.webViewDidStartLoad?(webView)
-    }
-    
-    public func webViewDidFinishLoad(webView: UIWebView) {
-        if webView != self.webView {
-            return
-        }
-        
-        if webView.stringByEvaluatingJavaScriptFromString("typeof \(JBX_JS_OBJECT) == 'object'") != "true" {
-            webView.stringByEvaluatingJavaScriptFromString(self.injectedJS)
-        }
-        
-        if let messages = postMessageQueue {
-            for message in messages {
-                postMessageToJS(message)
-            }
-            postMessageQueue = nil
-        }
-        self.webViewDelegate?.webViewDidFinishLoad?(webView)
-    }
-    
-    public func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
-        if webView != self.webView {
-            return
-        }
-        self.webViewDelegate?.webView?(webView, didFailLoadWithError: error)
     }
 }
 
@@ -339,4 +306,19 @@ public class Message {
         }
         return ""
     }
+}
+
+public protocol WebViewProtocol: class {
+    func loadUrl(url: NSURL)
+    func executeJavaScript(js: String, completionHandler: ((AnyObject?, NSError?) -> Void)?)
+    func registerEvent(eventName: String, handler: EventHandler)
+    func unregisterEvent(eventName: String)
+    func send(eventName: String, data: AnyObject?, callback: EventCallback?)
+}
+
+public protocol WebViewNavigationDelegate: class {
+    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: NSURLRequest) -> Bool
+    func webViewDidStartLoad(webView: WebViewProtocol)
+    func webViewDidFinishLoad(webView: WebViewProtocol)
+    func webView(webView: WebViewProtocol, didFailLoadWithError error: NSError)
 }

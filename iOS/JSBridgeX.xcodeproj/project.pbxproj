@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		260A57DF1E32074F00C8FB9A /* WKWebViewEx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260A57DE1E32074F00C8FB9A /* WKWebViewEx.swift */; };
+		260A57E11E32076500C8FB9A /* UIWebViewEx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260A57E01E32076500C8FB9A /* UIWebViewEx.swift */; };
 		26231BE21DB5C5B00013756F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26231BE11DB5C5B00013756F /* AppDelegate.swift */; };
 		26231BE41DB5C5B00013756F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26231BE31DB5C5B00013756F /* ViewController.swift */; };
 		26231BE71DB5C5B00013756F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 26231BE51DB5C5B00013756F /* Main.storyboard */; };
@@ -18,6 +20,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		260A57DE1E32074F00C8FB9A /* WKWebViewEx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WKWebViewEx.swift; sourceTree = "<group>"; };
+		260A57E01E32076500C8FB9A /* UIWebViewEx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIWebViewEx.swift; sourceTree = "<group>"; };
 		26231BDE1DB5C5B00013756F /* JSBridgeX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JSBridgeX.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		26231BE11DB5C5B00013756F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		26231BE31DB5C5B00013756F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -79,6 +83,8 @@
 				262951FF1DB60E120061B1B0 /* index.html */,
 				262952001DB60E120061B1B0 /* JSBridge.js */,
 				262952011DB60E120061B1B0 /* JSBridgeX.swift */,
+				260A57DE1E32074F00C8FB9A /* WKWebViewEx.swift */,
+				260A57E01E32076500C8FB9A /* UIWebViewEx.swift */,
 			);
 			path = lib;
 			sourceTree = SOURCE_ROOT;
@@ -166,8 +172,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				260A57DF1E32074F00C8FB9A /* WKWebViewEx.swift in Sources */,
 				262952041DB60E120061B1B0 /* JSBridgeX.swift in Sources */,
 				26231BE41DB5C5B00013756F /* ViewController.swift in Sources */,
+				260A57E11E32076500C8FB9A /* UIWebViewEx.swift in Sources */,
 				26231BE21DB5C5B00013756F /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

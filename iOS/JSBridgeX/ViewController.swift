@@ -8,60 +8,61 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIWebViewDelegate {
+class ViewController: UIViewController, WebViewNavigationDelegate {
 
-    private var webView: UIWebView!
-    private var jsBridge: JSBridgeX!
+    private var webView: WebViewProtocol!
+    private var usedUIWebView: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.webView = UIWebView(frame: self.view.bounds)
-        self.view.addSubview(self.webView)
+        if usedUIWebView {
+            let webView = UIWebViewEx(frame: self.view.bounds)
+            webView.webViewNavigationDelegate = self
+            self.view.addSubview(webView)
+            self.webView = webView
+        } else {
+            let webView = WKWebViewEx(frame: self.view.bounds)
+            webView.webViewNavigationDelegate = self
+            self.view.addSubview(webView)
+            self.webView = webView
+        }
+        
         let height: CGFloat = 40
         let button = UIButton(frame: CGRect(x: 0, y: self.view.bounds.height - height, width: self.view.bounds.width, height: height))
         button.backgroundColor = UIColor.blackColor()
         button.setTitle("Send", forState: .Normal)
         self.view.addSubview(button)
         button.addTarget(self, action: #selector(onClickSend), forControlEvents: .TouchUpInside)
-        jsBridge = JSBridgeX(webView: self.webView, webViewDelegate: self) { (eventName, data, callback) in
-            print("default: \(eventName)")
-
-        }
         let htmlPath = NSBundle.mainBundle().pathForResource("index", ofType: "html")!
         print("htmlPath: \(htmlPath)")
-        do {
-            let html = try String(contentsOfFile: htmlPath)
-            jsBridge.loadHTMLString(html ?? "", baseURL: nil)
-        } catch {
-            
-        }
-        jsBridge.registerEvent("Hello") { (data, callback) in
+        self.webView.loadUrl(NSURL(fileURLWithPath: htmlPath))
+        self.webView.registerEvent("Hello") { (data, callback) in
             print("Hello")
             callback?(code: 200, data: ["description": "成功"])
         }
     }
     
     func onClickSend() {
-        jsBridge.send("SendMessage1", data: ["desc": "hello"]) { (code, data) in
+        self.webView.send("SendMessage1", data: ["desc": "hello"]) { (code, data) in
             print("SendMessage callback")
         }
     }
     
-//MARK: - UIWebViewDelegate
+//MARK: - WebViewNavigationDelegate
     
-    func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: NSURLRequest) -> Bool {
         return true
     }
     
-    func webViewDidStartLoad(webView: UIWebView) {
+    func webViewDidStartLoad(webView: WebViewProtocol) {
         
     }
     
-    func webViewDidFinishLoad(webView: UIWebView) {
+    func webViewDidFinishLoad(webView: WebViewProtocol) {
         
     }
     
-    func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
+    func webView(webView: WebViewProtocol, didFailLoadWithError error: NSError) {
         
     }
 }
