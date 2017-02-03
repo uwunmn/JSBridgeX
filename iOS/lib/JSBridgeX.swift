@@ -320,5 +320,6 @@ public protocol WebViewNavigationDelegate: class {
     func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: NSURLRequest) -> Bool
     func webViewDidStartLoad(webView: WebViewProtocol)
     func webViewDidFinishLoad(webView: WebViewProtocol)
+    func webViewLoadingWithProgress(webView: WebViewProtocol, progress: NSTimeInterval)
     func webView(webView: WebViewProtocol, didFailLoadWithError error: NSError)
 }

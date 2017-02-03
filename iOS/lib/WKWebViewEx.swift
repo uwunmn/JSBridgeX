@@ -11,20 +11,31 @@ import WebKit
 public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
     //替代WKNavigationDelegate，用于获取页面加载的生命周期
-    weak var webViewNavigationDelegate: WebViewNavigationDelegate?
+    public weak var webViewNavigationDelegate: WebViewNavigationDelegate?
     private lazy var bridge: JSBridgeX = {
         return JSBridgeX(webView: self) { (eventName, data, callback) in
             print("undefined eventName: \(eventName)")
         }
     }()
     
-    override public init(frame: CGRect, configuration: WKWebViewConfiguration) {
+    public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
         super.init(frame: frame, configuration: configuration)
         self.navigationDelegate = self
+        self.addObserver(self, forKeyPath: "estimatedProgress", options: .New, context: nil)
     }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        self.removeObserver(self, forKeyPath: "estimatedProgress")
+    }
+    
+    public override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        if keyPath == "estimatedProgress" {
+            self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: self.estimatedProgress)
+        }
     }
     
     //MARK: - WKNavigationDelegate
@@ -47,6 +58,7 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
     public func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         self.webViewNavigationDelegate?.webViewDidStartLoad(self)
+        
     }
     
     public func webView(webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
@@ -54,6 +66,7 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     }
     
     public func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: NSError) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
         self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
     }
     
@@ -62,10 +75,12 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     }
     
     public func webView(webView: WKWebView, didFinishNavigation navigation: WKNavigation!) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
         self.webViewNavigationDelegate?.webViewDidFinishLoad(self)
     }
     
     public func webView(webView: WKWebView, didFailNavigation navigation: WKNavigation!, withError error: NSError) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
         self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
     }
 

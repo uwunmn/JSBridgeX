@@ -11,14 +11,14 @@ import UIKit
 public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     
     //替代UIWebViewDelegate，用于获取页面加载的生命周期
-    weak var webViewNavigationDelegate: WebViewNavigationDelegate?
+    public weak var webViewNavigationDelegate: WebViewNavigationDelegate?
     private lazy var bridge: JSBridgeX = {
         return JSBridgeX(webView: self) { (eventName, data, callback) in
             print("undefined eventName: \(eventName)")
         }
     }()
     
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         self.delegate = self
     }
@@ -37,15 +37,18 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     }
     
     public func webViewDidStartLoad(webView: UIWebView) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 0)
         self.webViewNavigationDelegate?.webViewDidStartLoad(self)
     }
     
     public func webViewDidFinishLoad(webView: UIWebView) {
         self.bridge.injectBridgeToJS()
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
         self.webViewNavigationDelegate?.webViewDidFinishLoad(self)
     }
     
     public func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
         self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
     }
     
