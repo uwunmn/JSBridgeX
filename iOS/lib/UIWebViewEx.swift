@@ -15,6 +15,7 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     private lazy var bridge: JSBridgeX = {
         return JSBridgeX(webView: self) { (eventName, data, callback) in
             print("undefined eventName: \(eventName)")
+            callback?(code: JSBridgeX.CODE_NOT_FOUND, data: nil)
         }
     }()
     
@@ -25,6 +26,10 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
+        self.bridge.defaultEventHandler = handler
     }
     
     //MARK: - UIWebViewDelegate
@@ -63,11 +68,11 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
         completionHandler?(result, nil)
     }
     
-    public func send(eventName: String, data: AnyObject?, callback: EventCallback?) {
+    public func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
         self.bridge.send(eventName, data: data, callback: callback)
     }
     
-    public func registerEvent(eventName: String, handler: EventHandler) {
+    public func registerEvent(eventName: String, handler: JSBridgeX.EventHandler) {
         self.bridge.registerEvent(eventName, handler: handler)
     }
     

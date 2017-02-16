@@ -15,6 +15,7 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     private lazy var bridge: JSBridgeX = {
         return JSBridgeX(webView: self) { (eventName, data, callback) in
             print("undefined eventName: \(eventName)")
+            callback?(code: JSBridgeX.CODE_NOT_FOUND, data: nil)
         }
     }()
     
@@ -36,6 +37,10 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
         if keyPath == "estimatedProgress" {
             self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: self.estimatedProgress)
         }
+    }
+    
+    public func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
+        self.bridge.defaultEventHandler = handler
     }
     
     //MARK: - WKNavigationDelegate
@@ -94,11 +99,11 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
         self.evaluateJavaScript(js, completionHandler: completionHandler)
     }
     
-    public func send(eventName: String, data: AnyObject?, callback: EventCallback?) {
+    public func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
         self.bridge.send(eventName, data: data, callback: callback)
     }
     
-    public func registerEvent(eventName: String, handler: EventHandler) {
+    public func registerEvent(eventName: String, handler: JSBridgeX.EventHandler) {
         self.bridge.registerEvent(eventName, handler: handler)
     }
     

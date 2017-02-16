@@ -8,25 +8,24 @@
 
 import UIKit
 
-public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
-public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
-public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
-public typealias LogClosure = (message: String, file: NSString, line: Int, column: Int, function: String) -> Void
-
 public class JSBridgeX: NSObject {
 
+    public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
+    public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
+    public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
+    public typealias LogCallback = (message: String, file: NSString, line: Int, column: Int, function: String) -> Void
+    
     public static let CODE_SUCCESS = 200
     public static let CODE_NOT_FOUND = 404
     public static let CODE_INVALID_PARAMETER = 403
     public static let CODE_INTERNAL_ERROR = 405
     
-    public var logClosure: LogClosure?
+    public static var LogClosure: LogCallback?
 
-    public let JBX_SCHEME = "jsbridgex"
-    public let JBX_HOST = "__JBX_HOST__"
-    public let JBX_PATH = "/__JBX_EVENT__"
-    
-    public let JBX_JS_OBJECT = "JSBridge"
+    private let JBX_SCHEME = "jsbridgex"
+    private let JBX_HOST = "__JBX_HOST__"
+    private let JBX_PATH = "/__JBX_EVENT__"
+    private let JBX_JS_OBJECT = "JSBridge"
     private let JBX_JS_METHOD_FETCH_MESSAGE_QUEUE = "fetchMessageQueue"
     private let JBX_JS_METHOD_POST_MESSAGE_TO_JS = "dispatchMessageFromNative"
     
@@ -39,11 +38,11 @@ public class JSBridgeX: NSObject {
     private var eventCallbacks: [String: EventCallback] = [: ]
     private var postMessageQueue: [Message]! = []
     private var eventUniqueId = 0
-    private let defaultMessageHandler: DefaultEventHandler?
+    public var defaultEventHandler: DefaultEventHandler?
     
-    public init(webView: WebViewProtocol, defaultMessageHandler: DefaultEventHandler?) {
+    public init(webView: WebViewProtocol, defaultEventHandler: DefaultEventHandler?) {
         self.webView = webView
-        self.defaultMessageHandler = defaultMessageHandler
+        self.defaultEventHandler = defaultEventHandler
         super.init()
         self.injectedJS = self.loadInjectedJS()
         registerEvent("listAllEvents") { (data, callback) in
@@ -186,7 +185,7 @@ public class JSBridgeX: NSObject {
             if let eventHandler = eventMap[eventName] {
                 eventHandler(data: message.data, callback: callbackBlock)
             } else {
-                defaultMessageHandler?(eventName: eventName, data: message.data, callback: callbackBlock)
+                defaultEventHandler?(eventName: eventName, data: message.data, callback: callbackBlock)
             }
             return
         }
@@ -220,7 +219,7 @@ public class JSBridgeX: NSObject {
     
     private func log(items: Any..., separator: String = " ", terminator: String = "\n", file: NSString = #file, line: Int = #line, column: Int = #column, function: String = #function) {
         let message = items.map({ String($0) }).joinWithSeparator(separator)
-        if let logClosure = self.logClosure {
+        if let logClosure = JSBridgeX.LogClosure {
             logClosure(message: message, file: file, line: line, column: column, function: function)
         } else {
             let dateFormater = NSDateFormatter()
@@ -311,9 +310,9 @@ public class Message {
 public protocol WebViewProtocol: class {
     func loadUrl(url: NSURL)
     func executeJavaScript(js: String, completionHandler: ((AnyObject?, NSError?) -> Void)?)
-    func registerEvent(eventName: String, handler: EventHandler)
+    func registerEvent(eventName: String, handler: JSBridgeX.EventHandler)
     func unregisterEvent(eventName: String)
-    func send(eventName: String, data: AnyObject?, callback: EventCallback?)
+    func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?)
 }
 
 public protocol WebViewNavigationDelegate: class {
