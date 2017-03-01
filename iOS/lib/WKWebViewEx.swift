@@ -49,26 +49,28 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
         let request = navigationAction.request
         if self.bridge.interceptRequest(request) {
             decisionHandler(.Cancel)
+            return
         }
         
         if let result = self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request) {
             decisionHandler(result ? .Allow : .Cancel)
+            return
         }
         decisionHandler(.Allow)
     }
     
-    public func webView(webView: WKWebView, decidePolicyForNavigationResponse navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
-        decisionHandler(.Allow)
-    }
+//    public func webView(webView: WKWebView, decidePolicyForNavigationResponse navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
+//        decisionHandler(.Allow)
+//    }
     
     public func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         self.webViewNavigationDelegate?.webViewDidStartLoad(self)
         
     }
-    
-    public func webView(webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
-        
-    }
+//    
+//    public func webView(webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+//        
+//    }
     
     public func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: NSError) {
         self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
