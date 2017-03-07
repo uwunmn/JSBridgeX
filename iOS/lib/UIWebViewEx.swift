@@ -42,18 +42,17 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     }
     
     public func webViewDidStartLoad(webView: UIWebView) {
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 0)
         self.webViewNavigationDelegate?.webViewDidStartLoad(self)
     }
     
     public func webViewDidFinishLoad(webView: UIWebView) {
         self.bridge.injectBridgeToJS()
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 0.9)
         self.webViewNavigationDelegate?.webViewDidFinishLoad(self)
     }
     
     public func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 0.9)
         self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
     }
     
