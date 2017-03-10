@@ -10,6 +10,9 @@ import WebKit
 
 public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
+    private let context = UnsafeMutablePointer<Void>.alloc(1)
+    private let kEstimatedProgress = "estimatedProgress"
+    
     //替代WKNavigationDelegate，用于获取页面加载的生命周期
     public weak var webViewNavigationDelegate: WebViewNavigationDelegate?
     private lazy var bridge: JSBridgeX = {
@@ -22,7 +25,7 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
         super.init(frame: frame, configuration: configuration)
         self.navigationDelegate = self
-        self.addObserver(self, forKeyPath: "estimatedProgress", options: .New, context: nil)
+        self.addObserver(self, forKeyPath: self.kEstimatedProgress, options: .New, context: self.context)
     }
     
     required public init?(coder: NSCoder) {
@@ -30,11 +33,12 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     }
     
     deinit {
-        self.removeObserver(self, forKeyPath: "estimatedProgress")
+        self.navigationDelegate = nil
+        self.removeObserver(self, forKeyPath: self.kEstimatedProgress, context: self.context)
     }
     
     public override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        if keyPath == "estimatedProgress" {
+        if keyPath == self.kEstimatedProgress {
             self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: self.estimatedProgress)
         }
     }
