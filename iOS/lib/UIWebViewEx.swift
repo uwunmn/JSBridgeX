@@ -38,7 +38,7 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
         if self.bridge.interceptRequest(request) {
             return false
         }
-        return self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request) ?? true
+        return self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationType)) ?? true
     }
     
     public func webViewDidStartLoad(webView: UIWebView) {

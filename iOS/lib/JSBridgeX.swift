@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import WebKit
 
 public class JSBridgeX: NSObject {
 
@@ -307,6 +308,49 @@ public class Message {
     }
 }
 
+public enum WebViewNavigationType : Int {
+    case LinkActivated
+    case FormSubmitted
+    case BackForward
+    case Reload
+    case FormResubmitted
+    case Other
+    
+    static func from(navigationType: WKNavigationType) -> WebViewNavigationType {
+        switch navigationType {
+        case .LinkActivated:
+            return .LinkActivated
+        case .FormSubmitted:
+            return .FormSubmitted
+        case .BackForward:
+            return .BackForward
+        case .Reload:
+            return .Reload
+        case .FormResubmitted:
+            return .FormResubmitted
+        case .Other:
+            return .Other
+        }
+    }
+    
+    static func from(navigationType: UIWebViewNavigationType) -> WebViewNavigationType {
+        switch navigationType {
+        case .LinkClicked:
+            return .LinkActivated
+        case .FormSubmitted:
+            return .FormSubmitted
+        case .BackForward:
+            return .BackForward
+        case .Reload:
+            return .Reload
+        case .FormResubmitted:
+            return .FormResubmitted
+        case .Other:
+            return .Other
+        }
+    }
+}
+
 public protocol WebViewProtocol: class {
     func loadUrl(url: NSURL)
     func executeJavaScript(js: String, completionHandler: ((AnyObject?, NSError?) -> Void)?)
@@ -316,7 +360,7 @@ public protocol WebViewProtocol: class {
 }
 
 public protocol WebViewNavigationDelegate: class {
-    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: NSURLRequest) -> Bool
+    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: NSURLRequest, navigationType: WebViewNavigationType) -> Bool
     func webViewDidStartLoad(webView: WebViewProtocol)
     func webViewDidFinishLoad(webView: WebViewProtocol)
     func webViewLoadingWithProgress(webView: WebViewProtocol, progress: NSTimeInterval)

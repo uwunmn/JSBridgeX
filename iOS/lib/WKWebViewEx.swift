@@ -56,7 +56,7 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
             return
         }
         
-        if let result = self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request) {
+        if let result = self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationAction.navigationType)) {
             decisionHandler(result ? .Allow : .Cancel)
             return
         }
