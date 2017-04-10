@@ -8,24 +8,24 @@
 
 import WebKit
 
-public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
+open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
-    private let context = UnsafeMutablePointer<Void>.alloc(1)
-    private let kEstimatedProgress = "estimatedProgress"
+    //    fileprivate let context = UnsafeMutableRawPointer.allocate(capacity: 1)
+    fileprivate let kEstimatedProgress = "estimatedProgress"
     
     //替代WKNavigationDelegate，用于获取页面加载的生命周期
-    public weak var webViewNavigationDelegate: WebViewNavigationDelegate?
-    private lazy var bridge: JSBridgeX = {
+    open weak var webViewNavigationDelegate: WebViewNavigationDelegate?
+    fileprivate lazy var bridge: JSBridgeX = {
         return JSBridgeX(webView: self) { (eventName, data, callback) in
             print("undefined eventName: \(eventName)")
-            callback?(code: JSBridgeX.CODE_NOT_FOUND, data: nil)
+            callback?(JSBridgeX.CODE_NOT_FOUND, nil)
         }
     }()
     
     public override init(frame: CGRect, configuration: WKWebViewConfiguration) {
         super.init(frame: frame, configuration: configuration)
         self.navigationDelegate = self
-        self.addObserver(self, forKeyPath: self.kEstimatedProgress, options: .New, context: self.context)
+        self.addObserver(self, forKeyPath: self.kEstimatedProgress, options: .new, context: nil)
     }
     
     required public init?(coder: NSCoder) {
@@ -34,87 +34,87 @@ public class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
     deinit {
         self.navigationDelegate = nil
-        self.removeObserver(self, forKeyPath: self.kEstimatedProgress, context: self.context)
+        self.removeObserver(self, forKeyPath: self.kEstimatedProgress, context: nil)
     }
     
-    public override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == self.kEstimatedProgress {
-            self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: self.estimatedProgress)
+            self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: self.estimatedProgress)
         }
     }
     
-    public func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
+    open func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
         self.bridge.defaultEventHandler = handler
     }
     
     //MARK: - WKNavigationDelegate
     
-    public func webView(webView: WKWebView, decidePolicyForNavigationAction navigationAction: WKNavigationAction, decisionHandler: (WKNavigationActionPolicy) -> Void) {
+    @nonobjc open func webView(webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         let request = navigationAction.request
-        if self.bridge.interceptRequest(request) {
-            decisionHandler(.Cancel)
+        if self.bridge.interceptRequest(request: request) {
+            decisionHandler(.cancel)
             return
         }
         
-        if let result = self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationAction.navigationType)) {
-            decisionHandler(result ? .Allow : .Cancel)
+        if let result = self.webViewNavigationDelegate?.webView(webView: self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationType: navigationAction.navigationType)) {
+            decisionHandler(result ? .allow : .cancel)
             return
         }
-        decisionHandler(.Allow)
+        decisionHandler(.allow)
     }
     
-//    public func webView(webView: WKWebView, decidePolicyForNavigationResponse navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
-//        decisionHandler(.Allow)
-//    }
+    //    public func webView(webView: WKWebView, decidePolicyForNavigationResponse navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
+    //        decisionHandler(.Allow)
+    //    }
     
-    public func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        self.webViewNavigationDelegate?.webViewDidStartLoad(self)
+    @nonobjc open func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        self.webViewNavigationDelegate?.webViewDidStartLoad(webView: self)
         
     }
-//    
-//    public func webView(webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
-//        
-//    }
+    //
+    //    public func webView(webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+    //
+    //    }
     
-    public func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: NSError) {
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
-        self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
+    @nonobjc open func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 1)
+        self.webViewNavigationDelegate?.webView(webView: self, didFailLoadWithError: error)
     }
     
-    public func webView(webView: WKWebView, didCommitNavigation navigation: WKNavigation!) {
+    @nonobjc open func webView(webView: WKWebView, didCommit navigation: WKNavigation!) {
         self.bridge.injectBridgeToJS()
     }
     
-    public func webView(webView: WKWebView, didFinishNavigation navigation: WKNavigation!) {
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
-        self.webViewNavigationDelegate?.webViewDidFinishLoad(self)
+    @nonobjc open func webView(webView: WKWebView, didFinish navigation: WKNavigation!) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 1)
+        self.webViewNavigationDelegate?.webViewDidFinishLoad(webView: self)
     }
     
-    public func webView(webView: WKWebView, didFailNavigation navigation: WKNavigation!, withError error: NSError) {
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 1)
-        self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
+    @nonobjc open func webView(webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 1)
+        self.webViewNavigationDelegate?.webView(webView: self, didFailLoadWithError: error)
     }
-
+    
     //MARK: - WebViewProtocol
     
-    public func loadUrl(url: NSURL) {
-        self.loadRequest(NSURLRequest(URL: url))
+    open func loadUrl(url: URL) {
+        self.load(URLRequest(url: url))
     }
     
-    public func executeJavaScript(js: String, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
+    open func executeJavaScript(js: String, completionHandler: ((Any?, Error?) -> Void)?) {
         self.evaluateJavaScript(js, completionHandler: completionHandler)
     }
     
-    public func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
-        self.bridge.send(eventName, data: data, callback: callback)
+    open func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
+        self.bridge.send(eventName: eventName, data: data, callback: callback)
     }
     
-    public func registerEvent(eventName: String, handler: JSBridgeX.EventHandler) {
-        self.bridge.registerEvent(eventName, handler: handler)
+    open func registerEvent(eventName: String, handler: @escaping JSBridgeX.EventHandler) {
+        self.bridge.registerEvent(eventName: eventName, handler: handler)
     }
     
-    public func unregisterEvent(eventName: String) {
-        self.bridge.unregisterEvent(eventName)
+    open func unregisterEvent(eventName: String) {
+        self.bridge.unregisterEvent(eventName: eventName)
     }
     
 }

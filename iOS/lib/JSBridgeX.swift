@@ -10,35 +10,35 @@ import UIKit
 import WebKit
 
 public class JSBridgeX: NSObject {
-
-    public typealias EventCallback = (code: Int, data: AnyObject?) -> Void
-    public typealias EventHandler = (data: AnyObject?, callback: EventCallback?) -> Void
-    public typealias DefaultEventHandler = (eventName: String, data: AnyObject?, callback: EventCallback?) -> Void
-    public typealias LogCallback = (message: String, file: NSString, line: Int, column: Int, function: String) -> Void
+    
+    public typealias EventCallback = (_ code: Int, _ data: Any?) -> Void
+    public typealias EventHandler = (_ data: Any?, _ callback: EventCallback?) -> Void
+    public typealias DefaultEventHandler = (_ eventName: String, _ data: Any?, _ callback: EventCallback?) -> Void
+    public typealias LogCallback = (_ message: String, _ file: NSString, _ line: Int, _ column: Int, _ function: String) -> Void
     
     public static let CODE_SUCCESS = 200
-    public static let CODE_NOT_FOUND = 404
     public static let CODE_INVALID_PARAMETER = 403
+    public static let CODE_NOT_FOUND = 404
     public static let CODE_INTERNAL_ERROR = 405
     
     public static var LogClosure: LogCallback?
-
-    private let JBX_SCHEME = "jsbridgex"
-    private let JBX_HOST = "__JBX_HOST__"
-    private let JBX_PATH = "/__JBX_EVENT__"
-    private let JBX_JS_OBJECT = "JSBridge"
-    private let JBX_JS_METHOD_FETCH_MESSAGE_QUEUE = "fetchMessageQueue"
-    private let JBX_JS_METHOD_POST_MESSAGE_TO_JS = "dispatchMessageFromNative"
     
-    private let JBX_METHOD_SEND = "SEND"
-    private let JBX_METHOD_CALLBACK = "CALLBACK"
+    fileprivate let JBX_SCHEME = "jsbridgex"
+    fileprivate let JBX_HOST = "__JBX_HOST__"
+    fileprivate let JBX_PATH = "/__JBX_EVENT__"
+    fileprivate let JBX_JS_OBJECT = "JSBridge"
+    fileprivate let JBX_JS_METHOD_FETCH_MESSAGE_QUEUE = "fetchMessageQueue"
+    fileprivate let JBX_JS_METHOD_POST_MESSAGE_TO_JS = "dispatchMessageFromNative"
     
-    private weak var webView: WebViewProtocol?
-    private var injectedJS: String = ""
-    private var eventMap: [String: EventHandler] = [: ]
-    private var eventCallbacks: [String: EventCallback] = [: ]
-    private var postMessageQueue: [Message]! = []
-    private var eventUniqueId = 0
+    fileprivate let JBX_METHOD_SEND = "SEND"
+    fileprivate let JBX_METHOD_CALLBACK = "CALLBACK"
+    
+    fileprivate weak var webView: WebViewProtocol?
+    fileprivate var injectedJS: String = ""
+    fileprivate var eventMap: [String: EventHandler] = [: ]
+    fileprivate var eventCallbacks: [String: EventCallback] = [: ]
+    fileprivate var postMessageQueue: [Message]! = []
+    fileprivate var eventUniqueId = 0
     public var defaultEventHandler: DefaultEventHandler?
     
     public init(webView: WebViewProtocol, defaultEventHandler: DefaultEventHandler?) {
@@ -46,9 +46,9 @@ public class JSBridgeX: NSObject {
         self.defaultEventHandler = defaultEventHandler
         super.init()
         self.injectedJS = self.loadInjectedJS()
-        registerEvent("listAllEvents") { (data, callback) in
+        self.registerEvent(eventName: "listAllEvents") { (data, callback) in
             let events = [String](self.eventMap.keys)
-            callback?(code: JSBridgeX.CODE_SUCCESS, data: ["Events": events])
+            callback?(JSBridgeX.CODE_SUCCESS, ["Events": events])
         }
     }
     
@@ -58,16 +58,16 @@ public class JSBridgeX: NSObject {
     
     //MARK: - internal property
     
-    public func loadURL(url: NSURL) {
-        self.webView?.loadUrl(url)
+    public func loadURL(url: URL) {
+        self.webView?.loadUrl(url: url)
     }
     
-    public func registerEvent(eventName: String, handler: EventHandler) {
-        eventMap[eventName] = handler
+    public func registerEvent(eventName: String, handler: @escaping EventHandler) {
+        self.eventMap[eventName] = handler
     }
     
     public func unregisterEvent(eventName: String) {
-        eventMap.removeValueForKey(eventName)
+        self.eventMap.removeValue(forKey: eventName)
     }
     
     public func send(eventName: String, data: AnyObject?, callback: EventCallback?) {
@@ -75,19 +75,19 @@ public class JSBridgeX: NSObject {
         message.eventName = eventName
         message.data = data
         if callback != nil {
-            eventUniqueId += 1
-            let callbackId = "ios_cb_\(eventUniqueId)"
+            self.eventUniqueId += 1
+            let callbackId = "ios_cb_\(self.eventUniqueId)"
             message.callbackId = callbackId
-            eventCallbacks[callbackId] = callback
+            self.eventCallbacks[callbackId] = callback
         }
-        postMessage(message)
+        self.postMessage(message: message)
     }
     
-    public func interceptRequest(request: NSURLRequest) -> Bool {
-        let url = request.URL
-        if let scheme = url?.scheme where scheme == JBX_SCHEME {
-            if let host = url?.host where host == JBX_HOST {
-                if let path = url?.relativePath where path == JBX_PATH {
+    public func interceptRequest(request: URLRequest) -> Bool {
+        let url = request.url
+        if let scheme = url?.scheme, scheme == JBX_SCHEME {
+            if let host = url?.host, host == JBX_HOST {
+                if let path = url?.relativePath, path == JBX_PATH {
                     self.dispatchMessageQueueFromJS()
                 }
             }
@@ -97,13 +97,13 @@ public class JSBridgeX: NSObject {
     }
     
     public func injectBridgeToJS() {
-        self.webView?.executeJavaScript("typeof \(JBX_JS_OBJECT) == 'object'") { [weak self] (object, error) in
+        self.webView?.executeJavaScript(js: "typeof \(JBX_JS_OBJECT) == 'object'") { [weak self] (object, error) in
             let result = (object as? String) ?? "false"
             if result == "false" {
-                self?.webView?.executeJavaScript((self?.injectedJS)!, completionHandler: nil)
+                self?.webView?.executeJavaScript(js: (self?.injectedJS)!, completionHandler: nil)
                 if let messages = self?.postMessageQueue {
                     for message in messages {
-                        self?.postMessageToJS(message)
+                        self?.postMessageToJS(message: message)
                     }
                     self?.postMessageQueue = nil
                 }
@@ -113,56 +113,56 @@ public class JSBridgeX: NSObject {
     
     //MARK: - private
     
-    private func callback(code: Int, callbackId: String, data: AnyObject?) {
+    fileprivate func callback(code: Int, callbackId: String, data: Any?) {
         let message = Message(method: JBX_METHOD_CALLBACK)
         message.code = code
         message.callbackId = callbackId
         message.data = data
-        postMessage(message)
+        self.postMessage(message: message)
     }
     
-    private func loadInjectedJS() -> String {
-        let resourceBundle = NSBundle(forClass: JSBridgeX.self)
-        var bundle = NSBundle.mainBundle()
-        if let url = resourceBundle.URLForResource("JSBridgeX", withExtension: "bundle") {
-            bundle = NSBundle(URL: url) ?? bundle
+    fileprivate func loadInjectedJS() -> String {
+        let resourceBundle = Bundle(for: JSBridgeX.self)
+        var bundle = Bundle.main
+        if let url = resourceBundle.url(forResource: "JSBridgeX", withExtension: "bundle") {
+            bundle = Bundle(url: url) ?? bundle
         }
-        if let jsFilePath = bundle.pathForResource("JSBridge", ofType: "js") {
+        if let jsFilePath = bundle.path(forResource: "JSBridge", ofType: "js") {
             do {
                 return try String(contentsOfFile: jsFilePath)
             } catch {
-            
+                
             }
         }
         return ""
     }
     
-    private func dispatchMessageQueueFromJS(){
+    fileprivate func dispatchMessageQueueFromJS(){
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_FETCH_MESSAGE_QUEUE)()"
-        self.webView?.executeJavaScript(jsMethod) { [weak self] (object, error) in
+        self.webView?.executeJavaScript(js: jsMethod) { [weak self] (object, error) in
             if let messageString = object as? String {
-                self?.handleMessageQueueFromJS(messageString)
+                self?.handleMessageQueueFromJS(messageString: messageString)
             }
         }
     }
     
-    private func handleMessageQueueFromJS(messageString: String) {
-        if let messageData = messageString.dataUsingEncoding(NSUTF8StringEncoding) {
-            self.log("dispatchMessageQueueFromJS:", messageString)
-            let messages = self.parseMessageQueue(messageData)
+    fileprivate func handleMessageQueueFromJS(messageString: String) {
+        if let messageData = messageString.data(using: String.Encoding.utf8) {
+            self.log(items: "dispatchMessageQueueFromJS:", messageString)
+            let messages = self.parseMessageQueue(data: messageData)
             for message in messages {
                 if message.method == JBX_METHOD_SEND {
-                    self.handleMessageSentFromJS(message)
+                    self.handleMessageSentFromJS(message: message)
                 } else if message.method == JBX_METHOD_CALLBACK {
-                    self.handleMessageCallbackFromJS(message)
+                    self.handleMessageCallbackFromJS(message: message)
                 }
             }
         }
     }
     
-    private func parseMessageQueue(data: NSData) -> [Message] {
+    fileprivate func parseMessageQueue(data: Data) -> [Message] {
         do {
-            if let messages = try NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments) as? [[String: AnyObject]] {
+            if let messages = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [[String: AnyObject]] {
                 return messages.flatMap({ (dict) -> Message? in
                     return Message(rawDict: dict)
                 })
@@ -173,59 +173,59 @@ public class JSBridgeX: NSObject {
         return []
     }
     
-    private func handleMessageSentFromJS(message: Message) {
+    fileprivate func handleMessageSentFromJS(message: Message) {
         let callbackId = message.callbackId
         let eventName = message.eventName
         var callbackBlock: EventCallback?
         if callbackId != nil {
-            callbackBlock = { [weak self] (code: Int, data: AnyObject?) in
-                self?.callback(code, callbackId: callbackId!, data: data)
+            callbackBlock = { [weak self] (code: Int, data: Any?) in
+                self?.callback(code: code, callbackId: callbackId!, data: data)
             }
         }
         if let eventName = eventName {
             if let eventHandler = eventMap[eventName] {
-                eventHandler(data: message.data, callback: callbackBlock)
+                eventHandler(message.data, callbackBlock)
             } else {
-                defaultEventHandler?(eventName: eventName, data: message.data, callback: callbackBlock)
+                defaultEventHandler?(eventName, message.data, callbackBlock)
             }
             return
         }
-        callbackBlock?(code: JSBridgeX.CODE_INVALID_PARAMETER, data: nil)
+        callbackBlock?(JSBridgeX.CODE_INVALID_PARAMETER, nil)
     }
     
-    private func handleMessageCallbackFromJS(message: Message) {
+    fileprivate func handleMessageCallbackFromJS(message: Message) {
         if let callbackId = message.callbackId,
             let eventCallback = eventCallbacks[callbackId] {
             if let code = message.code {
-                eventCallback(code: code, data: message.data)
+                eventCallback(code, message.data)
             } else {
-                eventCallback(code: JSBridgeX.CODE_INVALID_PARAMETER, data: nil)
+                eventCallback(JSBridgeX.CODE_INVALID_PARAMETER, nil)
             }
         }
     }
     
-    private func postMessage(message: Message) {
-        log("postMessage:", message.description)
+    fileprivate func postMessage(message: Message) {
+        self.log(items: "postMessage:", message.description)
         if postMessageQueue != nil {
             postMessageQueue!.append(message)
         } else {
-            postMessageToJS(message)
+            postMessageToJS(message: message)
         }
     }
     
-    private func postMessageToJS(message: Message) {
+    fileprivate func postMessageToJS(message: Message) {
         let jsMethod = "\(JBX_JS_OBJECT).\(JBX_JS_METHOD_POST_MESSAGE_TO_JS)(\(message.toString()))"
-        self.webView?.executeJavaScript(jsMethod, completionHandler: nil)
+        self.webView?.executeJavaScript(js: jsMethod, completionHandler: nil)
     }
     
-    private func log(items: Any..., separator: String = " ", terminator: String = "\n", file: NSString = #file, line: Int = #line, column: Int = #column, function: String = #function) {
-        let message = items.map({ String($0) }).joinWithSeparator(separator)
+    fileprivate func log(items: Any..., separator: String = " ", terminator: String = "\n", file: NSString = #file, line: Int = #line, column: Int = #column, function: String = #function) {
+        let message = items.map({ String(describing: $0) }).joined(separator: separator)
         if let logClosure = JSBridgeX.LogClosure {
-            logClosure(message: message, file: file, line: line, column: column, function: function)
+            logClosure(message, file, line, column, function)
         } else {
-            let dateFormater = NSDateFormatter()
+            let dateFormater = DateFormatter()
             dateFormater.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-            let date = dateFormater.stringFromDate(NSDate())
+            let date = dateFormater.string(from: Date())
             let result = "JSX|\(date) [\(line)]: \(message)"
             print(result, separator: "", terminator: "\n")
         }
@@ -255,11 +255,12 @@ public class Message {
             self.dict[JBX_KEY_CODE] = self.code
         }
     }
-    public var data: AnyObject? {
+    public var data: Any? {
         didSet {
             self.dict[JBX_KEY_DATA] = self.data
         }
     }
+    
     public var callbackId: String? {
         didSet {
             self.dict[JBX_KEY_CALLBACK_ID] = self.callbackId
@@ -268,15 +269,15 @@ public class Message {
     
     public var description: String {
         do {
-            let data = try NSJSONSerialization.dataWithJSONObject(self.dict, options: .PrettyPrinted)
-            return String(data: data, encoding: NSUTF8StringEncoding) ?? ""
+            let data = try JSONSerialization.data(withJSONObject: self.dict, options: .prettyPrinted)
+            return String(data: data, encoding: String.Encoding.utf8) ?? ""
         } catch {
             
         }
         return ""
     }
     
-    private var dict: [String: AnyObject] = [:]
+    fileprivate var dict: [String: Any] = [:]
     
     public init(method: String) {
         self.method = method
@@ -290,7 +291,7 @@ public class Message {
             self.code = rawDict[JBX_KEY_CODE] as? Int
             self.data = rawDict[JBX_KEY_DATA]
             self.callbackId = rawDict[JBX_KEY_CALLBACK_ID] as? String
-            dict = rawDict
+            self.dict = rawDict
             return
         }
         
@@ -299,8 +300,8 @@ public class Message {
     
     public func toString() -> String {
         do {
-            let data = try NSJSONSerialization.dataWithJSONObject(self.dict, options: NSJSONWritingOptions(rawValue: 0))
-            return String(data: data, encoding: NSUTF8StringEncoding) ?? ""
+            let data = try JSONSerialization.data(withJSONObject: self.dict, options: JSONSerialization.WritingOptions(rawValue: 0))
+            return String(data: data, encoding: String.Encoding.utf8) ?? ""
         } catch {
             
         }
@@ -309,60 +310,60 @@ public class Message {
 }
 
 public enum WebViewNavigationType : Int {
-    case LinkActivated
-    case FormSubmitted
-    case BackForward
-    case Reload
-    case FormResubmitted
-    case Other
+    case linkActivated
+    case formSubmitted
+    case backForward
+    case reload
+    case formResubmitted
+    case other
     
     static func from(navigationType: WKNavigationType) -> WebViewNavigationType {
         switch navigationType {
-        case .LinkActivated:
-            return .LinkActivated
-        case .FormSubmitted:
-            return .FormSubmitted
-        case .BackForward:
-            return .BackForward
-        case .Reload:
-            return .Reload
-        case .FormResubmitted:
-            return .FormResubmitted
-        case .Other:
-            return .Other
+        case .linkActivated:
+            return .linkActivated
+        case .formSubmitted:
+            return .formSubmitted
+        case .backForward:
+            return .backForward
+        case .reload:
+            return .reload
+        case .formResubmitted:
+            return .formResubmitted
+        case .other:
+            return .other
         }
     }
     
     static func from(navigationType: UIWebViewNavigationType) -> WebViewNavigationType {
         switch navigationType {
-        case .LinkClicked:
-            return .LinkActivated
-        case .FormSubmitted:
-            return .FormSubmitted
-        case .BackForward:
-            return .BackForward
-        case .Reload:
-            return .Reload
-        case .FormResubmitted:
-            return .FormResubmitted
-        case .Other:
-            return .Other
+        case .linkClicked:
+            return .linkActivated
+        case .formSubmitted:
+            return .formSubmitted
+        case .backForward:
+            return .backForward
+        case .reload:
+            return .reload
+        case .formResubmitted:
+            return .formResubmitted
+        case .other:
+            return .other
         }
     }
 }
 
 public protocol WebViewProtocol: class {
-    func loadUrl(url: NSURL)
-    func executeJavaScript(js: String, completionHandler: ((AnyObject?, NSError?) -> Void)?)
-    func registerEvent(eventName: String, handler: JSBridgeX.EventHandler)
+    func loadUrl(url: URL)
+    func executeJavaScript(js: String, completionHandler: ((Any?, Error?) -> Void)?)
+    func registerEvent(eventName: String, handler:  @escaping JSBridgeX.EventHandler)
     func unregisterEvent(eventName: String)
     func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?)
 }
 
 public protocol WebViewNavigationDelegate: class {
-    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: NSURLRequest, navigationType: WebViewNavigationType) -> Bool
+    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: URLRequest, navigationType: WebViewNavigationType) -> Bool
     func webViewDidStartLoad(webView: WebViewProtocol)
     func webViewDidFinishLoad(webView: WebViewProtocol)
-    func webViewLoadingWithProgress(webView: WebViewProtocol, progress: NSTimeInterval)
-    func webView(webView: WebViewProtocol, didFailLoadWithError error: NSError)
+    func webViewLoadingWithProgress(webView: WebViewProtocol, progress: TimeInterval)
+    func webView(webView: WebViewProtocol, didFailLoadWithError error: Error)
 }

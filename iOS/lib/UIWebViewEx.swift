@@ -8,14 +8,15 @@
 
 import UIKit
 
-public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
+open class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     
     //替代UIWebViewDelegate，用于获取页面加载的生命周期
-    public weak var webViewNavigationDelegate: WebViewNavigationDelegate?
-    private lazy var bridge: JSBridgeX = {
+    open weak var webViewNavigationDelegate: WebViewNavigationDelegate?
+    
+    fileprivate lazy var bridge: JSBridgeX = {
         return JSBridgeX(webView: self) { (eventName, data, callback) in
             print("undefined eventName: \(eventName)")
-            callback?(code: JSBridgeX.CODE_NOT_FOUND, data: nil)
+            callback?(JSBridgeX.CODE_NOT_FOUND, nil)
         }
     }()
     
@@ -28,54 +29,54 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
+    open func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
         self.bridge.defaultEventHandler = handler
     }
     
     //MARK: - UIWebViewDelegate
     
-    public func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        if self.bridge.interceptRequest(request) {
+    @nonobjc open func webView(webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+        if self.bridge.interceptRequest(request: request) {
             return false
         }
-        return self.webViewNavigationDelegate?.webView(self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationType)) ?? true
+        return self.webViewNavigationDelegate?.webView(webView: self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationType: navigationType)) ?? true
     }
     
-    public func webViewDidStartLoad(webView: UIWebView) {
-        self.webViewNavigationDelegate?.webViewDidStartLoad(self)
+    @nonobjc open func webViewDidStartLoad(webView: UIWebView) {
+        self.webViewNavigationDelegate?.webViewDidStartLoad(webView: self)
     }
     
-    public func webViewDidFinishLoad(webView: UIWebView) {
+    @nonobjc open func webViewDidFinishLoad(webView: UIWebView) {
         self.bridge.injectBridgeToJS()
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 0.9)
-        self.webViewNavigationDelegate?.webViewDidFinishLoad(self)
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 0.9)
+        self.webViewNavigationDelegate?.webViewDidFinishLoad(webView: self)
     }
     
-    public func webView(webView: UIWebView, didFailLoadWithError error: NSError) {
-        self.webViewNavigationDelegate?.webViewLoadingWithProgress(self, progress: 0.9)
-        self.webViewNavigationDelegate?.webView(self, didFailLoadWithError: error)
+    @nonobjc open func webView(webView: UIWebView, didFailLoadWithError error: Error) {
+        self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 0.9)
+        self.webViewNavigationDelegate?.webView(webView: self, didFailLoadWithError: error)
     }
     
     //MARK: - WebViewProtocol
     
-    public func loadUrl(url: NSURL) {
-        self.loadRequest(NSURLRequest(URL: url))
+    open func loadUrl(url: URL) {
+        self.loadRequest(URLRequest(url: url))
     }
-
-    public func executeJavaScript(js: String, completionHandler: ((AnyObject?, NSError?) -> Void)?) {
-        let result = self.stringByEvaluatingJavaScriptFromString(js)
+    
+    open func executeJavaScript(js: String, completionHandler: ((Any?, Error?) -> Void)?) {
+        let result = self.stringByEvaluatingJavaScript(from: js)
         completionHandler?(result, nil)
     }
     
-    public func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
-        self.bridge.send(eventName, data: data, callback: callback)
+    open func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
+        self.bridge.send(eventName: eventName, data: data, callback: callback)
     }
     
-    public func registerEvent(eventName: String, handler: JSBridgeX.EventHandler) {
-        self.bridge.registerEvent(eventName, handler: handler)
+    open func registerEvent(eventName: String, handler: @escaping JSBridgeX.EventHandler) {
+        self.bridge.registerEvent(eventName: eventName, handler: handler)
     }
     
-    public func unregisterEvent(eventName: String) {
-        self.bridge.unregisterEvent(eventName)
+    open func unregisterEvent(eventName: String) {
+        self.bridge.unregisterEvent(eventName: eventName)
     }
 }
