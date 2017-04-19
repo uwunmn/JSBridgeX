@@ -70,7 +70,7 @@ public class JSBridgeX: NSObject {
         self.eventMap.removeValue(forKey: eventName)
     }
     
-    public func send(eventName: String, data: AnyObject?, callback: EventCallback?) {
+    public func send(eventName: String, data: Any?, callback: EventCallback?) {
         let message = Message(method: JBX_METHOD_SEND)
         message.eventName = eventName
         message.data = data
@@ -357,7 +357,7 @@ public protocol WebViewProtocol: class {
     func executeJavaScript(js: String, completionHandler: ((Any?, Error?) -> Void)?)
     func registerEvent(eventName: String, handler:  @escaping JSBridgeX.EventHandler)
     func unregisterEvent(eventName: String)
-    func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?)
+    func send(eventName: String, data: Any?, callback: JSBridgeX.EventCallback?)
 }
 
 public protocol WebViewNavigationDelegate: class {

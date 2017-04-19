@@ -68,7 +68,7 @@ open class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
         completionHandler?(result, nil)
     }
     
-    open func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
+    open func send(eventName: String, data: Any?, callback: JSBridgeX.EventCallback?) {
         self.bridge.send(eventName: eventName, data: data, callback: callback)
     }
     

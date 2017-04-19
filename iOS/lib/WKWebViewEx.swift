@@ -105,7 +105,7 @@ open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
         self.evaluateJavaScript(js, completionHandler: completionHandler)
     }
     
-    open func send(eventName: String, data: AnyObject?, callback: JSBridgeX.EventCallback?) {
+    open func send(eventName: String, data: Any?, callback: JSBridgeX.EventCallback?) {
         self.bridge.send(eventName: eventName, data: data, callback: callback)
     }
     
