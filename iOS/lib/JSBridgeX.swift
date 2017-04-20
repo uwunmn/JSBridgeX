@@ -46,13 +46,14 @@ public class JSBridgeX: NSObject {
         self.defaultEventHandler = defaultEventHandler
         super.init()
         self.injectedJS = self.loadInjectedJS()
-        registerEvent("listAllEvents") { (data, callback) in
-            let events = [String](self.eventMap.keys)
-            callback?(code: JSBridgeX.CODE_SUCCESS, data: ["Events": events])
-        }
+//        registerEvent("listAllEvents") { (data, callback) in
+//            let events = [String](self.eventMap.keys)
+//            callback?(code: JSBridgeX.CODE_SUCCESS, data: ["Events": events])
+//        }
     }
     
     deinit {
+        log("JSBridgeX, deinit")
         self.webView = nil
     }
     
