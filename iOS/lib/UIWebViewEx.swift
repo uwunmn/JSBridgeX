@@ -28,6 +28,10 @@ public class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        delegate = nil
+    }
+    
     public func setDeaultEventHandler(handler: JSBridgeX.DefaultEventHandler?) {
         self.bridge.defaultEventHandler = handler
     }
