@@ -46,10 +46,6 @@ public class JSBridgeX: NSObject {
         self.defaultEventHandler = defaultEventHandler
         super.init()
         self.injectedJS = self.loadInjectedJS()
-        self.registerEvent(eventName: "listAllEvents") { (data, callback) in
-            let events = [String](self.eventMap.keys)
-            callback?(JSBridgeX.CODE_SUCCESS, ["Events": events])
-        }
     }
     
     deinit {
