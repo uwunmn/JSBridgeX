@@ -49,7 +49,7 @@ open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
     //MARK: - WKNavigationDelegate
     
-    @nonobjc open func webView(webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         let request = navigationAction.request
         if self.bridge.interceptRequest(request: request) {
             decisionHandler(.cancel)
@@ -67,7 +67,7 @@ open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     //        decisionHandler(.Allow)
     //    }
     
-    @nonobjc open func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         self.webViewNavigationDelegate?.webViewDidStartLoad(webView: self)
         
     }
@@ -76,21 +76,21 @@ open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     //
     //    }
     
-    @nonobjc open func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 1)
         self.webViewNavigationDelegate?.webView(webView: self, didFailLoadWithError: error)
     }
     
-    @nonobjc open func webView(webView: WKWebView, didCommit navigation: WKNavigation!) {
+    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         self.bridge.injectBridgeToJS()
     }
     
-    @nonobjc open func webView(webView: WKWebView, didFinish navigation: WKNavigation!) {
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 1)
         self.webViewNavigationDelegate?.webViewDidFinishLoad(webView: self)
     }
     
-    @nonobjc open func webView(webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 1)
         self.webViewNavigationDelegate?.webView(webView: self, didFailLoadWithError: error)
     }

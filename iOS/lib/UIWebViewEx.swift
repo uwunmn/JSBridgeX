@@ -39,24 +39,24 @@ open class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     
     //MARK: - UIWebViewDelegate
     
-    @nonobjc open func webView(webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+    public func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
         if self.bridge.interceptRequest(request: request) {
             return false
         }
         return self.webViewNavigationDelegate?.webView(webView: self, shouldStartLoadWithRequest: request, navigationType: WebViewNavigationType.from(navigationType: navigationType)) ?? true
     }
     
-    @nonobjc open func webViewDidStartLoad(webView: UIWebView) {
+    public func webViewDidStartLoad(_ webView: UIWebView) {
         self.webViewNavigationDelegate?.webViewDidStartLoad(webView: self)
     }
     
-    @nonobjc open func webViewDidFinishLoad(webView: UIWebView) {
+    public func webViewDidFinishLoad(_ webView: UIWebView) {
         self.bridge.injectBridgeToJS()
         self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 0.9)
         self.webViewNavigationDelegate?.webViewDidFinishLoad(webView: self)
     }
     
-    @nonobjc open func webView(webView: UIWebView, didFailLoadWithError error: Error) {
+    public func webView(_ webView: UIWebView, didFailLoadWithError error: Error) {
         self.webViewNavigationDelegate?.webViewLoadingWithProgress(webView: self, progress: 0.9)
         self.webViewNavigationDelegate?.webView(webView: self, didFailLoadWithError: error)
     }
