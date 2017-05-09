@@ -1,9 +1,9 @@
 //
 //  AppDelegate.swift
-//  JSBridgeX
+//  JSBridgeXSample
 //
-//  Created by Xiaohui on 2016/10/18.
-//  Copyright © 2016年 TLX. All rights reserved.
+//  Created by Xiaohui on 2017/4/10.
+//  Copyright © 2017年 TLX. All rights reserved.
 //
 
 import UIKit
@@ -13,8 +13,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        window = UIWindow(frame: UIScreen.main.bounds)
+        window?.backgroundColor = UIColor.white
+        window?.rootViewController = UINavigationController(rootViewController: ViewController())
+        window?.makeKeyAndVisible()
         return true
     }
 

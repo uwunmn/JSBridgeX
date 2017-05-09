@@ -10,6 +10,7 @@ import WebKit
 
 open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
+    //    fileprivate let context = UnsafeMutableRawPointer.allocate(capacity: 1)
     fileprivate let kEstimatedProgress = "estimatedProgress"
     
     //替代WKNavigationDelegate，用于获取页面加载的生命周期
@@ -96,23 +97,7 @@ open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     
     //MARK: - WebViewProtocol
     
-    open var canBack: Bool {
-        return self.canGoBack
-    }
-    
-    open var canForward: Bool {
-        return self.canGoForward
-    }
-    
-    open func back() {
-        self.goBack()
-    }
-    
-    open func forward() {
-        self.goForward()
-    }
-    
-    open func load(url: URL) {
+    open func loadUrl(url: URL) {
         self.load(URLRequest(url: url))
     }
     
@@ -131,4 +116,5 @@ open class WKWebViewEx: WKWebView, WebViewProtocol, WKNavigationDelegate {
     open func unregisterEvent(eventName: String) {
         self.bridge.unregisterEvent(eventName: eventName)
     }
+    
 }

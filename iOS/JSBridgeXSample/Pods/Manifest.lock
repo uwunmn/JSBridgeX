@@ -1,0 +1,16 @@
+PODS:
+  - JSBridgeX (0.1.4)
+
+DEPENDENCIES:
+  - JSBridgeX (from `../../../JSBridgeX`)
+
+EXTERNAL SOURCES:
+  JSBridgeX:
+    :path: ../../../JSBridgeX
+
+SPEC CHECKSUMS:
+  JSBridgeX: 62063f078bc4c2f603198e2dd9bbcf2e215ef97f
+
+PODFILE CHECKSUM: 002464ddca3ba63e2b0082f070f24aeb78c19e75
+
+COCOAPODS: 1.1.1

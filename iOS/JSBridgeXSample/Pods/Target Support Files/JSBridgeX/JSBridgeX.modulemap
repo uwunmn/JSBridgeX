@@ -1,0 +1,6 @@
+framework module JSBridgeX {
+  umbrella header "JSBridgeX-umbrella.h"
+
+  export *
+  module * { export * }
+}

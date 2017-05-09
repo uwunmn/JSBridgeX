@@ -63,23 +63,7 @@ open class UIWebViewEx: UIWebView, UIWebViewDelegate, WebViewProtocol {
     
     //MARK: - WebViewProtocol
     
-    open var canBack: Bool {
-        return self.canGoBack
-    }
-    
-    open var canForward: Bool {
-        return self.canGoForward
-    }
-    
-    open func back() {
-        self.goBack()
-    }
-    
-    open func forward() {
-        self.goForward()
-    }
-    
-    open func load(url: URL) {
+    open func loadUrl(url: URL) {
         self.loadRequest(URLRequest(url: url))
     }
     

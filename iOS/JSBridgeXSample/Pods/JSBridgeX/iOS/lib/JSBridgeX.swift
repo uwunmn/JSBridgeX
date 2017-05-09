@@ -55,7 +55,7 @@ public class JSBridgeX: NSObject {
     //MARK: - internal property
     
     public func loadURL(url: URL) {
-        self.webView?.load(url: url)
+        self.webView?.loadUrl(url: url)
     }
     
     public func registerEvent(eventName: String, handler: @escaping EventHandler) {
@@ -346,4 +346,20 @@ public enum WebViewNavigationType : Int {
             return .other
         }
     }
+}
+
+public protocol WebViewProtocol: class {
+    func loadUrl(url: URL)
+    func executeJavaScript(js: String, completionHandler: ((Any?, Error?) -> Void)?)
+    func registerEvent(eventName: String, handler:  @escaping JSBridgeX.EventHandler)
+    func unregisterEvent(eventName: String)
+    func send(eventName: String, data: Any?, callback: JSBridgeX.EventCallback?)
+}
+
+public protocol WebViewNavigationDelegate: class {
+    func webView(webView: WebViewProtocol, shouldStartLoadWithRequest request: URLRequest, navigationType: WebViewNavigationType) -> Bool
+    func webViewDidStartLoad(webView: WebViewProtocol)
+    func webViewDidFinishLoad(webView: WebViewProtocol)
+    func webViewLoadingWithProgress(webView: WebViewProtocol, progress: TimeInterval)
+    func webView(webView: WebViewProtocol, didFailLoadWithError error: Error)
 }

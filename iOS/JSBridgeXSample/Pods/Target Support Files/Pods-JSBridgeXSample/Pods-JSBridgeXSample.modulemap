@@ -1,0 +1,6 @@
+framework module Pods_JSBridgeXSample {
+  umbrella header "Pods-JSBridgeXSample-umbrella.h"
+
+  export *
+  module * { export * }
+}
